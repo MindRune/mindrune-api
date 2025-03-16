@@ -1,0 +1,43 @@
+{
+  "name": "express",
+  "version": "0.0.1",
+  "private": true,
+  "scripts": {
+    "start": "node ./bin/www"
+  },
+  "dependencies": {
+    "assert": "^2.0.0",
+    "better-sqlite3": "^8.0.1",
+    "cookie-parser": "~1.4.4",
+    "crypto-browserify": "^3.12.0",
+    "debug": "~2.6.9",
+    "dkg.js": "^6.5.0",
+    "dotenv": "^16.4.7",
+    "ejs": "~2.6.1",
+    "ethereumjs-util": "^7.1.5",
+    "ethers": "^5.7.2",
+    "express": "~4.16.1",
+    "fs": "^0.0.1-security",
+    "http-errors": "~1.6.3",
+    "http-server": "^14.1.1",
+    "https-browserify": "^1.0.0",
+    "install": "^0.13.0",
+    "jsonld": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "keccak256": "^1.0.6",
+    "morgan": "~1.9.1",
+    "multer": "^1.4.5-lts.1",
+    "mysql": "^2.18.1",
+    "neo4j-driver": "^5.28.1",
+    "npm": "^10.8.1",
+    "nsfwjs": "^4.1.0",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "resolve": "^1.22.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.2.0",
+    "telegraf": "^4.11.2",
+    "uuid": "^11.1.0",
+    "web3": "^1.8.1"
+  }
+}

@@ -1,0 +1,11 @@
+[Unit]
+Description=MindRune API
+
+[Service]
+Type=simple
+WorkingDirectory=/root/mindrune-api
+ExecStart=/root/mindrune-api/mindrune-api.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
