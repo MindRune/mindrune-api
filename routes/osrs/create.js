@@ -53,6 +53,7 @@ async function isRareItem(itemId) {
       `${process.env.OSRS_WIKI_HOST}/api.php?action=cargoquery&format=json&tables=Drop&fields=ItemID,ItemName,Rarity,RarityRaw&where=ItemID=${itemId}`
     );
 
+    console.log(response)
     const data = await response.json();
 
     if (data.cargoquery && data.cargoquery.length > 0) {
