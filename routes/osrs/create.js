@@ -46,39 +46,39 @@ async function getEventTypePoints() {
 }
 
 // Helper function to check if an item is rare (can be expanded with actual game data)
-async function isRareItem(itemId) {
-  try {
-    // Query the OSRS Wiki API
-    const response = await fetch(
-      `${process.env.OSRS_WIKI_HOST}/api.php?action=cargoquery&format=json&tables=Drop&fields=ItemID,ItemName,Rarity,RarityRaw&where=ItemID=${itemId}`
-    );
+// async function isRareItem(itemId) {
+//   try {
+//     // Query the OSRS Wiki API
+//     const response = await fetch(
+//       `${process.env.OSRS_WIKI_HOST}/api.php?action=cargoquery&format=json&tables=Drop&fields=ItemID,ItemName,Rarity,RarityRaw&where=ItemID=${itemId}`
+//     );
 
-    console.log(response)
-    const data = await response.json();
+//     console.log(response)
+//     const data = await response.json();
 
-    if (data.cargoquery && data.cargoquery.length > 0) {
-      // Check if any of the drop sources have a rarity of 1/500 or rarer
-      for (const entry of data.cargoquery) {
-        const rarityRaw = entry.title.RarityRaw;
+//     if (data.cargoquery && data.cargoquery.length > 0) {
+//       // Check if any of the drop sources have a rarity of 1/500 or rarer
+//       for (const entry of data.cargoquery) {
+//         const rarityRaw = entry.title.RarityRaw;
 
-        // RarityRaw is usually in the format "1/512" or similar
-        if (rarityRaw && rarityRaw.includes("/")) {
-          const [numerator, denominator] = rarityRaw.split("/").map(Number);
+//         // RarityRaw is usually in the format "1/512" or similar
+//         if (rarityRaw && rarityRaw.includes("/")) {
+//           const [numerator, denominator] = rarityRaw.split("/").map(Number);
 
-          // Check if the denominator is 500 or higher (rarer)
-          if (numerator === 1 && denominator >= 500) {
-            return true;
-          }
-        }
-      }
-    }
+//           // Check if the denominator is 500 or higher (rarer)
+//           if (numerator === 1 && denominator >= 500) {
+//             return true;
+//           }
+//         }
+//       }
+//     }
 
-    return false;
-  } catch (error) {
-    console.error("Error checking item rarity:", error);
-    return false;
-  }
-}
+//     return false;
+//   } catch (error) {
+//     console.error("Error checking item rarity:", error);
+//     return false;
+//   }
+// }
 
 // Helper function to check for similar messages
 function hasSimilarChatInTransaction(
@@ -316,16 +316,16 @@ async function calculatePoints(events, isNewPlayer, seasonConfig) {
       points *= 1.3;
     }
 
-    if (
-      scoreEventType === "ItemNode" &&
-      event.details &&
-      event.details.itemId
-    ) {
-      const isRare = await isRareItem(event.details.itemId);
-      if (isRare) {
-        points *= 1.2;
-      }
-    }
+    // if (
+    //   scoreEventType === "ItemNode" &&
+    //   event.details &&
+    //   event.details.itemId
+    // ) {
+    //   const isRare = await isRareItem(event.details.itemId);
+    //   if (isRare) {
+    //     points *= 1.2;
+    //   }
+    // }
 
     // Handle quest completion
     if (scoreEventType === "QuestCompletionEvent" && event.details) {
