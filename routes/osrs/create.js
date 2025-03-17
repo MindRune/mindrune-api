@@ -534,7 +534,8 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
           let isRare = false;
           try {
             if (event.details && event.details.itemId) {
-              isRare = await isRareItem(event.details.itemId);
+              //isRare = await isRareItem(event.details.itemId);
+              isRare = 0
             }
           } catch (error) {
             console.error("Error checking item rarity:", error);
