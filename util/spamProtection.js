@@ -85,7 +85,7 @@ module.exports = async function actionSpam(request, account) {
     const default_query = `
       SELECT * FROM txn_header
       WHERE receiver = ?
-      AND created_at >= DATE_SUB(NOW(), INTERVAL 60 SECOND)
+      AND created_at >= DATE_SUB(NOW(), INTERVAL 50 SECOND)
     `;
     const default_params = [account];
    

@@ -127,29 +127,6 @@ function isJsonString(str) {
   }
 }
 
-async function isNewPlayer(account, playerId) {
-  const session = driver.session();
-  try {
-    const result = await session.executeRead((tx) => {
-      return tx.run(
-        `
-        MATCH (player:Player {account: $account, playerId: $playerId})
-        RETURN count(player) as playerCount
-      `,
-        { account, playerId }
-      );
-    });
-
-    // If no players found, this is a new player
-    return result.records[0].get("playerCount").toNumber() === 0;
-  } catch (error) {
-    console.error("Error checking if player is new:", error);
-    return false;
-  } finally {
-    await session.close();
-  }
-}
-
 async function getSeasonConfig() {
   // In a production system, this would fetch from DB
   // For now, return a default config
@@ -190,16 +167,12 @@ async function getQuestScore(questName) {
   }
 }
 
-async function calculatePoints(events, isNewPlayer, seasonConfig) {
+async function calculatePoints(events, seasonConfig) {
   let totalPoints = 0;
   let eventTypeCounts = {};
   let previousChatMessages = [];
   const EVENT_TYPE_POINTS = await getEventTypePoints();
 
-  // Add new player bonus
-  if (isNewPlayer) {
-    totalPoints += 100;
-  }
 
   // Process each event - replace forEach with for...of to properly handle async
   for (const event of events) {
@@ -341,14 +314,6 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
     let events = data.slice(1);
     console.log(`[${new Date().toISOString()}] Processing ${events.length} events`);
 
-    // Check if this is a new player
-    const isPlayerNewStartTime = Date.now();
-    console.log(`[${new Date().toISOString()}] Checking if player is new`);
-    
-    const isPlayerNew = await isNewPlayer(account, playerInfo.playerId);
-    
-    console.log(`[${new Date().toISOString()}] isNewPlayer check completed in ${Date.now() - isPlayerNewStartTime}ms, result: ${isPlayerNew}`);
-
     // Get current season configuration
     const seasonConfigStartTime = Date.now();
     console.log(`[${new Date().toISOString()}] Getting season config`);
@@ -387,8 +352,7 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
           uuid: $txn_uuid,
           timestamp: datetime(),
           eventCount: $eventCount,
-          totalPoints: $totalPoints,
-          isNewPlayer: $isNewPlayer
+          totalPoints: $totalPoints
         })
         CREATE (txn)-[:ASSOCIATED_WITH]->(player)
         RETURN player, txn
@@ -400,8 +364,7 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
           combatLevel: playerInfo.combatLevel,
           txn_uuid: txn_uuid,
           eventCount: events.length,
-          totalPoints: totalPoints,
-          isNewPlayer: isPlayerNew,
+          totalPoints: totalPoints
         }
       );
     });
@@ -473,8 +436,7 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
     return {
       success: true,
       eventCount: events.length,
-      totalPoints: totalPoints,
-      isNewPlayer: isPlayerNew,
+      totalPoints: totalPoints
     };
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Error in Neo4j operations after ${Date.now() - neo4jStartTime}ms:`, error);
