@@ -59,11 +59,17 @@ router.post("/", async function (req, res, next) {
     Granting Permission for Data Use:
     You hereby grant MindRune.xyz permission to access, store, and use any data you submit through the registration key. This includes but is not limited to your Ethereum address, registration information, and any other associated data submitted during the registration process.
 
+    Use of Submitted Data:
+    You acknowledge that the data you submit may be used by us for purposes related to the registration process, user management, or providing services related to our application, including analytics, communication, and improving the platform's functionality. We may also use the data to personalize your experience or for other purposes as described in our Privacy Policy.
+
     No Expiry on Registration Key:
     The registration key issued to you is valid indefinitely, unless explicitly revoked or terminated by us. It is your responsibility to keep this key safe and secure.
 
     No Refunds or Reversals:
     Once the message is signed and the registration key is issued, it is non-reversible. You cannot undo or withdraw the registration after submitting it, as transactions are final and immutable.
+
+    Security and Privacy:
+    We are committed to protecting your privacy. However, you acknowledge and accept that the information submitted may be visible on the blockchain, depending on the platform's settings and public visibility of transactions.
 
     Limitation of Liability:
     You agree that, to the fullest extent permitted by applicable law, we shall not be held liable for any damage, loss, or risk arising out of your use of the registration key, data submission, or transactions. You understand any token affiliated with MindRune is not an investment vehicle with no speculative value.
