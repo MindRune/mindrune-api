@@ -33,7 +33,7 @@ async function getMINDRUNEData(query, params) {
 
 module.exports = async function actionSpam(request, account) {
   console.log(`Checking if ${account} is spamming with request type: ${request}`);
-  
+ 
   // First check if user exists
   let query = `SELECT * FROM user_header WHERE account = ?`;
   let params = [account];
@@ -45,22 +45,23 @@ module.exports = async function actionSpam(request, account) {
       console.error("Error retrieving user data:", error);
       return null;
     });
-
+  
   if (!user_record || user_record.length === 0) {
     return { permission: "block" };
   }
-
+  
   // Different rate limiting logic based on request type
   if (request === "create") {
-    // For create transactions, check if there's any create action within the last 59 seconds
+    // For create transactions, check if there's any create action within the last 45 seconds
     const create_query = `
-      SELECT * FROM txn_header 
-      WHERE receiver = ? 
+      SELECT *, TIMESTAMPDIFF(SECOND, created_at, NOW()) as seconds_ago 
+      FROM txn_header
+      WHERE receiver = ?
       AND request = 'create'
       AND created_at >= DATE_SUB(NOW(), INTERVAL 45 SECOND)
     `;
     const create_params = [account];
-    
+   
     const recent_creates = await getMINDRUNEData(create_query, create_params)
       .then((results) => {
         return results;
@@ -69,22 +70,25 @@ module.exports = async function actionSpam(request, account) {
         console.error("Error retrieving create transaction data:", error);
         return [];
       });
-    
+   
     console.log(`Found ${recent_creates.length} recent create transactions for account ${account}`);
     
-    // If any create transactions found in the last 59 seconds, block the request
+    // Log detailed information about each recent transaction for debugging
     if (recent_creates.length > 0) {
+      recent_creates.forEach(tx => {
+        console.log(`Transaction ID: ${tx.id}, Created: ${tx.created_at}, Seconds ago: ${tx.seconds_ago}`);
+      });
       return { permission: "block" };
     }
   } else {
     // For non-create transactions, use the default rate limiting logic
     const default_query = `
-      SELECT * FROM txn_header 
-      WHERE receiver = ? 
-      AND UNIX_TIMESTAMP(NOW()) - created_at <= 60
+      SELECT * FROM txn_header
+      WHERE receiver = ?
+      AND created_at >= DATE_SUB(NOW(), INTERVAL 60 SECOND)
     `;
     const default_params = [account];
-    
+   
     const request_frequency = await getMINDRUNEData(default_query, default_params)
       .then((results) => {
         return results;
@@ -93,13 +97,13 @@ module.exports = async function actionSpam(request, account) {
         console.error("Error retrieving default transaction data:", error);
         return [];
       });
-    
+   
     // Check if the frequency exceeds the default rate
     if (Number(default_rate) < request_frequency.length) {
       return { permission: "block" };
     }
   }
-  
+ 
   // If we've passed all checks, allow the transaction
   return { permission: "allow" };
 };
