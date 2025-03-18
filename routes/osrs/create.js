@@ -328,7 +328,6 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
     
     const totalPoints = await calculatePoints(
       events,
-      isPlayerNew,
       seasonConfig
     );
     
