@@ -261,20 +261,17 @@ async function calculatePoints(events, isNewPlayer, seasonConfig) {
       const damage = Number(event.details.damage);
       
       switch (true) {
-        case damage > 50:
-          points += damage * 1.4;
-          break;
         case damage > 40:
-          points += damage * 1.3;
-          break;
-        case damage > 30:
           points += damage * 1.2;
           break;
+        case damage > 30:
+          points += damage * 1.3;
+          break;
         case damage > 20:
-          points += damage * 1.1;
+          points += damage * 1.2;
           break;
         case damage > 10:
-          points += damage * 1.05;
+          points += damage * 1.1;
           break;
       }
     }
