@@ -328,7 +328,7 @@ async function calculatePoints(events, isNewPlayer, seasonConfig) {
 }
 
 // Helper function to insert data into Neo4j
-// Helper function to insert data into Neo4j
+// Helper function to insert data into Neo4j with batch processing
 async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
   const neo4jStartTime = Date.now();
   console.log(`[${new Date().toISOString()}] Starting insertIntoNeo4j for account: ${account}`);
@@ -369,490 +369,102 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
     
     console.log(`[${new Date().toISOString()}] Points calculation completed in ${Date.now() - pointsCalculationStartTime}ms, total points: ${totalPoints}`);
 
-    // Create Player node based on both account and playerId
-    const playerNodeStartTime = Date.now();
-    console.log(`[${new Date().toISOString()}] Creating/updating player node`);
+    // Create Player node and Transaction node in a single transaction
+    const nodesCreationStartTime = Date.now();
+    console.log(`[${new Date().toISOString()}] Creating player and transaction nodes`);
     
     await session.executeWrite((tx) => {
       return tx.run(
         `
-    MERGE (player:Player {account: $account, playerId: $playerId})
-    SET player.name = $playerName,
-        player.combatLevel = $combatLevel,
-        player.lastUpdated = datetime()
-    RETURN player
-  `,
+        MERGE (player:Player {account: $account, playerId: $playerId})
+        SET player.name = $playerName,
+            player.combatLevel = $combatLevel,
+            player.lastUpdated = datetime()
+        
+        WITH player
+        
+        CREATE (txn:Transaction {
+          uuid: $txn_uuid,
+          timestamp: datetime(),
+          eventCount: $eventCount,
+          totalPoints: $totalPoints,
+          isNewPlayer: $isNewPlayer
+        })
+        CREATE (txn)-[:ASSOCIATED_WITH]->(player)
+        RETURN player, txn
+        `,
         {
           account: account,
           playerId: playerInfo.playerId,
           playerName: playerInfo.playerName,
           combatLevel: playerInfo.combatLevel,
-        }
-      );
-    });
-    
-    console.log(`[${new Date().toISOString()}] Player node operation completed in ${Date.now() - playerNodeStartTime}ms`);
-
-    // Create Transaction node with points and link to the correct player
-    const txnNodeStartTime = Date.now();
-    console.log(`[${new Date().toISOString()}] Creating transaction node`);
-    
-    await session.executeWrite((tx) => {
-      return tx.run(
-        `
-    CREATE (txn:Transaction {
-      uuid: $txn_uuid,
-      timestamp: datetime(),
-      eventCount: $eventCount,
-      totalPoints: $totalPoints,
-      isNewPlayer: $isNewPlayer
-    })
-    WITH txn
-    MATCH (player:Player {account: $account, playerId: $playerId})
-    CREATE (txn)-[:ASSOCIATED_WITH]->(player)
-    RETURN txn
-  `,
-        {
           txn_uuid: txn_uuid,
           eventCount: events.length,
-          account: account,
-          playerId: playerInfo.playerId,
           totalPoints: totalPoints,
           isNewPlayer: isPlayerNew,
         }
       );
     });
     
-    console.log(`[${new Date().toISOString()}] Transaction node created in ${Date.now() - txnNodeStartTime}ms`);
+    console.log(`[${new Date().toISOString()}] Player and transaction nodes created in ${Date.now() - nodesCreationStartTime}ms`);
 
-    // Process each event
-    const eventsProcessingStartTime = Date.now();
-    console.log(`[${new Date().toISOString()}] Starting to process ${events.length} events`);
+    // Group events by type
+    const eventsByType = {};
+    events.forEach((event, index) => {
+      if (!eventsByType[event.eventType]) {
+        eventsByType[event.eventType] = [];
+      }
+      eventsByType[event.eventType].push({...event, index});
+    });
     
-    for (let i = 0; i < events.length; i++) {
-      const eventStartTime = Date.now();
-      const event = events[i];
-      console.log(`[${new Date().toISOString()}] Processing event ${i+1}/${events.length}, type: ${event.eventType}`);
+    console.log(`[${new Date().toISOString()}] Grouped events into ${Object.keys(eventsByType).length} types`);
+
+    // Process each event type in batches
+    const eventsProcessingStartTime = Date.now();
+    
+    for (const eventType in eventsByType) {
+      const typeStartTime = Date.now();
+      const eventsOfType = eventsByType[eventType];
+      console.log(`[${new Date().toISOString()}] Processing batch of ${eventsOfType.length} ${eventType} events`);
       
-      // Base event properties
-      const eventParams = {
-        event_uuid: `${data_uuid}_${i}`,
-        txn_uuid: txn_uuid,
-        account: account,
-        playerId: playerInfo.playerId,
-        eventType: event.eventType,
-        timestamp: event.timestamp,
-        eventPoints: event.points || 0, // Add points to event
-      };
-
-      // Add location if available
-      if (event.playerLocation) {
-        eventParams.locationX = event.playerLocation.x;
-        eventParams.locationY = event.playerLocation.y;
-        eventParams.locationPlane = event.playerLocation.plane;
-      }
-
-      // Process event by type
-      switch (event.eventType) {
+      switch (eventType) {
         case "MENU_CLICK":
-          await session.executeWrite((tx) => {
-            return tx.run(
-              `
-              MATCH (txn:Transaction {uuid: $txn_uuid})
-              MATCH (player:Player {account: $account, playerId: $playerId})
-              CREATE (event:MenuClickEvent {
-                uuid: $event_uuid,
-                eventType: $eventType,
-                timestamp: datetime($timestamp),
-                action: $action,
-                target: $target,
-                points: $eventPoints
-              })
-              CREATE (event)-[:PERFORMED_BY]->(player)
-              CREATE (event)-[:PART_OF]->(txn)
-              ${
-                event.playerLocation
-                  ? `
-              CREATE (location:Location {
-                x: $locationX,
-                y: $locationY,
-                plane: $locationPlane
-              })
-              CREATE (event)-[:LOCATED_AT]->(location)
-              `
-                  : ""
-              }
-              RETURN event
-            `,
-              {
-                ...eventParams,
-                action: event.details.action,
-                target: event.details.target,
-              }
-            );
-          });
+          await batchProcessMenuClicks(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
           break;
-
+          
         case "XP_GAIN":
-          await session.executeWrite((tx) => {
-            return tx.run(
-              `
-              MATCH (txn:Transaction {uuid: $txn_uuid})
-              MATCH (player:Player {account: $account, playerId: $playerId})
-              CREATE (event:XpGainEvent {
-                uuid: $event_uuid,
-                eventType: $eventType,
-                timestamp: datetime($timestamp),
-                skill: $skill,
-                xpGained: $xpGained,
-                totalXp: $totalXp,
-                level: $level,
-                points: $eventPoints
-              })
-              CREATE (event)-[:PERFORMED_BY]->(player)
-              CREATE (event)-[:PART_OF]->(txn)
-              ${
-                event.playerLocation
-                  ? `
-              CREATE (location:Location {
-                x: $locationX,
-                y: $locationY,
-                plane: $locationPlane
-              })
-              CREATE (event)-[:LOCATED_AT]->(location)
-              `
-                  : ""
-              }
-              
-              MERGE (skill:Skill {name: $skill})
-              CREATE (event)-[:RELATED_TO]->(skill)
-              
-              RETURN event
-            `,
-              {
-                ...eventParams,
-                skill: event.details.skill,
-                xpGained: event.details.xpGained,
-                totalXp: event.details.totalXp,
-                level: event.details.level,
-              }
-            );
-          });
+          await batchProcessXpGains(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
           break;
-
+          
         case "INVENTORY_CHANGE":
-          // Check if the item is rare before the transaction
-          let isRare = false;
-          try {
-            if (event.details && event.details.itemId) {
-              //isRare = await isRareItem(event.details.itemId);
-              isRare = 0
-            }
-          } catch (error) {
-            console.error("Error checking item rarity:", error);
-          }
-
-          await session.executeWrite((tx) => {
-            return tx.run(
-              `
-        MATCH (txn:Transaction {uuid: $txn_uuid})
-        MATCH (player:Player {account: $account, playerId: $playerId})
-        CREATE (event:InventoryChangeEvent {
-          uuid: $event_uuid,
-          eventType: $eventType,
-          timestamp: datetime($timestamp),
-          points: $eventPoints,
-          itemName: $itemName,
-          isRareItem: $isRare
-        })
-        CREATE (event)-[:PERFORMED_BY]->(player)
-        CREATE (event)-[:PART_OF]->(txn)
-        ${
-          event.playerLocation
-            ? `
-        CREATE (location:Location {
-          x: $locationX,
-          y: $locationY,
-          plane: $locationPlane
-        })
-        CREATE (event)-[:LOCATED_AT]->(location)
-        `
-            : ""
-        }
-        
-        MERGE (item:Item {itemId: $itemId})
-        SET item.name = $itemName,
-            item.isRare = $isRare
-        CREATE (event)-[:ADDED]->(item)
-        
-        RETURN event
-      `,
-              {
-                ...eventParams,
-                itemId: event.details.itemId,
-                itemName: event.details.itemName || "Unknown Item",
-                isRare: isRare,
-              }
-            );
-          });
+          await batchProcessInventoryChanges(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
           break;
-
+          
         case "HIT_SPLAT":
-          await session.executeWrite((tx) => {
-            return tx.run(
-              `
-                MATCH (txn:Transaction {uuid: $txn_uuid})
-                MATCH (player:Player {account: $account, playerId: $playerId})
-                CREATE (event:CombatEvent {
-                  uuid: $event_uuid,
-                  eventType: $eventType,
-                  timestamp: datetime($timestamp),
-                  damage: $damage,
-                  target: $target,
-                  points: $eventPoints
-                })
-                CREATE (event)-[:PERFORMED_BY]->(player)
-                CREATE (event)-[:PART_OF]->(txn)
-                ${
-                  event.playerLocation
-                    ? `
-                CREATE (location:Location {
-                  x: $locationX,
-                  y: $locationY,
-                  plane: $locationPlane
-                })
-                CREATE (event)-[:LOCATED_AT]->(location)
-                `
-                    : ""
-                }
-               
-                // Check if the target matches the player's name
-                WITH event, player
-                CALL {
-                  WITH event, player
-                  MATCH (target)
-                  WHERE 
-                    (target:Player AND target.name = $target) OR 
-                    (target:Character AND target.name = $target)
-                  CREATE (event)-[:TARGETED]->(target)
-                  RETURN target
-                }
-               
-                RETURN event
-              `,
-              {
-                ...eventParams,
-                damage: event.details.damage,
-                target: event.details.target,
-              }
-            );
-          });
+          await batchProcessHitSplats(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
           break;
-
-        case "QUEST_COMPLETION":
-          await session.executeWrite((tx) => {
-            return tx.run(
-              `
-      MATCH (txn:Transaction {uuid: $txn_uuid})
-      MATCH (player:Player {account: $account, playerId: $playerId})
-      CREATE (event:QuestCompletionEvent {
-        uuid: $event_uuid,
-        eventType: $eventType,
-        timestamp: datetime($timestamp),
-        questName: $questName,
-        points: $eventPoints
-      })
-      CREATE (event)-[:PERFORMED_BY]->(player)
-      CREATE (event)-[:PART_OF]->(txn)
-      ${
-        event.playerLocation
-          ? `
-      CREATE (location:Location {
-        x: $locationX,
-        y: $locationY,
-        plane: $locationPlane
-      })
-      CREATE (event)-[:LOCATED_AT]->(location)
-      `
-          : ""
-      }
-      
-      MERGE (quest:Quest {name: $questName})
-      SET quest.difficulty = $difficulty,
-          quest.questPoints = $questPoints
-      CREATE (event)-[:COMPLETED]->(quest)
-      
-      RETURN event
-    `,
-              {
-                ...eventParams,
-                questName: event.details.questName,
-              }
-            );
-          });
-          break;
-
-        case "ACHIEVEMENT_DIARY_COMPLETION":
-          await session.executeWrite((tx) => {
-            return tx.run(
-              `
-      MATCH (txn:Transaction {uuid: $txn_uuid})
-      MATCH (player:Player {account: $account, playerId: $playerId})
-      CREATE (event:AchievementDiaryEvent {
-        uuid: $event_uuid,
-        eventType: $eventType,
-        timestamp: datetime($timestamp),
-        diaryName: $diaryName,
-        diaryTier: $diaryTier,
-        message: $message,
-        points: $eventPoints
-      })
-      CREATE (event)-[:PERFORMED_BY]->(player)
-      CREATE (event)-[:PART_OF]->(txn)
-      ${
-        event.playerLocation
-          ? `
-      CREATE (location:Location {
-        x: $locationX,
-        y: $locationY,
-        plane: $locationPlane
-      })
-      CREATE (event)-[:LOCATED_AT]->(location)
-      `
-          : ""
-      }
-      
-      MERGE (diary:AchievementDiary {name: $diaryName})
-      SET diary.tier = $diaryTier
-      CREATE (event)-[:COMPLETED]->(diary)
-      
-      RETURN event
-    `,
-              {
-                ...eventParams,
-                diaryName: event.details.diaryName,
-                diaryTier: event.details.diaryTier,
-                message: event.details.message,
-              }
-            );
-          });
-          break;
-
-        case "COMBAT_ACHIEVEMENT_COMPLETION":
-          await session.executeWrite((tx) => {
-            return tx.run(
-              `
-      MATCH (txn:Transaction {uuid: $txn_uuid})
-      MATCH (player:Player {account: $account, playerId: $playerId})
-      CREATE (event:CombatAchievementEvent {
-        uuid: $event_uuid,
-        eventType: $eventType,
-        timestamp: datetime($timestamp),
-        achievementName: $achievementName,
-        message: $message,
-        points: $eventPoints
-      })
-      CREATE (event)-[:PERFORMED_BY]->(player)
-      CREATE (event)-[:PART_OF]->(txn)
-      ${
-        event.playerLocation
-          ? `
-      CREATE (location:Location {
-        x: $locationX,
-        y: $locationY,
-        plane: $locationPlane
-      })
-      CREATE (event)-[:LOCATED_AT]->(location)
-      `
-          : ""
-      }
-      
-      MERGE (achievement:CombatAchievement {name: $achievementName})
-      CREATE (event)-[:COMPLETED]->(achievement)
-      
-      RETURN event
-    `,
-              {
-                ...eventParams,
-                achievementName: event.details.achievementName,
-                message: event.details.message,
-              }
-            );
-          });
-          break;
-
+          
         case "WORLD_CHANGE":
-          await session.executeWrite((tx) => {
-            return tx.run(
-              `
-              MATCH (txn:Transaction {uuid: $txn_uuid})
-              MATCH (player:Player {account: $account, playerId: $playerId})
-              CREATE (event:WorldChangeEvent {
-                uuid: $event_uuid,
-                eventType: $eventType,
-                timestamp: datetime($timestamp),
-                points: $eventPoints
-              })
-              CREATE (event)-[:PERFORMED_BY]->(player)
-              CREATE (event)-[:PART_OF]->(txn)
-              ${
-                event.playerLocation
-                  ? `
-              CREATE (location:Location {
-                x: $locationX,
-                y: $locationY,
-                plane: $locationPlane
-              })
-              CREATE (event)-[:LOCATED_AT]->(location)
-              `
-                  : ""
-              }
-              RETURN event
-            `,
-              eventParams
-            );
-          });
+          await batchProcessWorldChanges(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
           break;
-
+          
+        case "QUEST_COMPLETION":
+          await batchProcessQuestCompletions(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
+          break;
+          
+        case "ACHIEVEMENT_DIARY_COMPLETION":
+          await batchProcessAchievementDiaries(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
+          break;
+          
+        case "COMBAT_ACHIEVEMENT_COMPLETION":
+          await batchProcessCombatAchievements(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
+          break;
+          
         default:
-          // Generic event handling for unknown types
-          await session.executeWrite((tx) => {
-            return tx.run(
-              `
-              MATCH (txn:Transaction {uuid: $txn_uuid})
-              MATCH (player:Player {account: $account, playerId: $playerId})
-              CREATE (event:GameEvent {
-                uuid: $event_uuid,
-                eventType: $eventType,
-                timestamp: datetime($timestamp),
-                details: $details,
-                points: $eventPoints
-              })
-              CREATE (event)-[:PERFORMED_BY]->(player)
-              CREATE (event)-[:PART_OF]->(txn)
-              ${
-                event.playerLocation
-                  ? `
-              CREATE (location:Location {
-                x: $locationX,
-                y: $locationY,
-                plane: $locationPlane
-              })
-              CREATE (event)-[:LOCATED_AT]->(location)
-              `
-                  : ""
-              }
-              RETURN event
-            `,
-              {
-                ...eventParams,
-                details: JSON.stringify(event.details),
-              }
-            );
-          });
+          await batchProcessGenericEvents(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
       }
       
-      console.log(`[${new Date().toISOString()}] Event ${i+1} (${event.eventType}) processed in ${Date.now() - eventStartTime}ms`);
+      console.log(`[${new Date().toISOString()}] Completed batch of ${eventsOfType.length} ${eventType} events in ${Date.now() - typeStartTime}ms`);
     }
     
     console.log(`[${new Date().toISOString()}] All events processed in ${Date.now() - eventsProcessingStartTime}ms`);
@@ -871,6 +483,502 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
     await session.close();
     console.log(`[${new Date().toISOString()}] Neo4j session closed after ${Date.now() - neo4jStartTime}ms`);
   }
+}
+
+// Batch process MENU_CLICK events
+async function batchProcessMenuClicks(session, events, txn_uuid, data_uuid, account, playerId) {
+  const params = {
+    txn_uuid,
+    account,
+    playerId,
+    events: events.map(event => ({
+      event_uuid: `${data_uuid}_${event.index}`,
+      timestamp: event.timestamp,
+      action: event.details.action,
+      target: event.details.target,
+      points: event.points || 0,
+      hasLocation: !!event.playerLocation,
+      locationX: event.playerLocation?.x,
+      locationY: event.playerLocation?.y,
+      locationPlane: event.playerLocation?.plane
+    }))
+  };
+
+  return session.executeWrite(tx => {
+    return tx.run(`
+      MATCH (txn:Transaction {uuid: $txn_uuid})
+      MATCH (player:Player {account: $account, playerId: $playerId})
+      
+      UNWIND $events AS event
+      
+      CREATE (e:MenuClickEvent {
+        uuid: event.event_uuid,
+        eventType: 'MENU_CLICK',
+        timestamp: datetime(event.timestamp),
+        action: event.action,
+        target: event.target,
+        points: event.points
+      })
+      CREATE (e)-[:PERFORMED_BY]->(player)
+      CREATE (e)-[:PART_OF]->(txn)
+      
+      WITH e, event
+      WHERE event.hasLocation = true
+      
+      CREATE (location:Location {
+        x: event.locationX,
+        y: event.locationY, 
+        plane: event.locationPlane
+      })
+      CREATE (e)-[:LOCATED_AT]->(location)
+    `, params);
+  });
+}
+
+// Batch process XP_GAIN events
+async function batchProcessXpGains(session, events, txn_uuid, data_uuid, account, playerId) {
+  const params = {
+    txn_uuid,
+    account,
+    playerId,
+    events: events.map(event => ({
+      event_uuid: `${data_uuid}_${event.index}`,
+      timestamp: event.timestamp,
+      skill: event.details.skill,
+      xpGained: event.details.xpGained,
+      totalXp: event.details.totalXp,
+      level: event.details.level,
+      points: event.points || 0,
+      hasLocation: !!event.playerLocation,
+      locationX: event.playerLocation?.x,
+      locationY: event.playerLocation?.y,
+      locationPlane: event.playerLocation?.plane
+    }))
+  };
+
+  return session.executeWrite(tx => {
+    return tx.run(`
+      MATCH (txn:Transaction {uuid: $txn_uuid})
+      MATCH (player:Player {account: $account, playerId: $playerId})
+      
+      UNWIND $events AS event
+      
+      CREATE (e:XpGainEvent {
+        uuid: event.event_uuid,
+        eventType: 'XP_GAIN',
+        timestamp: datetime(event.timestamp),
+        skill: event.skill,
+        xpGained: event.xpGained,
+        totalXp: event.totalXp,
+        level: event.level,
+        points: event.points
+      })
+      CREATE (e)-[:PERFORMED_BY]->(player)
+      CREATE (e)-[:PART_OF]->(txn)
+      
+      MERGE (skill:Skill {name: event.skill})
+      CREATE (e)-[:RELATED_TO]->(skill)
+      
+      WITH e, event
+      WHERE event.hasLocation = true
+      
+      CREATE (location:Location {
+        x: event.locationX,
+        y: event.locationY, 
+        plane: event.locationPlane
+      })
+      CREATE (e)-[:LOCATED_AT]->(location)
+    `, params);
+  });
+}
+
+// Batch process INVENTORY_CHANGE events
+async function batchProcessInventoryChanges(session, events, txn_uuid, data_uuid, account, playerId) {
+  // Pre-process to check for rare items (currently mocked)
+  const eventsWithRarity = events.map(event => {
+    let isRare = false;
+    // Here you'd normally call your rarity check function
+    // We're mocking it to false for all items now
+    return {...event, isRare};
+  });
+
+  const params = {
+    txn_uuid,
+    account,
+    playerId,
+    events: eventsWithRarity.map(event => ({
+      event_uuid: `${data_uuid}_${event.index}`,
+      timestamp: event.timestamp,
+      itemId: event.details.itemId,
+      itemName: event.details.itemName || "Unknown Item",
+      isRare: event.isRare,
+      points: event.points || 0,
+      hasLocation: !!event.playerLocation,
+      locationX: event.playerLocation?.x,
+      locationY: event.playerLocation?.y,
+      locationPlane: event.playerLocation?.plane
+    }))
+  };
+
+  return session.executeWrite(tx => {
+    return tx.run(`
+      MATCH (txn:Transaction {uuid: $txn_uuid})
+      MATCH (player:Player {account: $account, playerId: $playerId})
+      
+      UNWIND $events AS event
+      
+      CREATE (e:InventoryChangeEvent {
+        uuid: event.event_uuid,
+        eventType: 'INVENTORY_CHANGE',
+        timestamp: datetime(event.timestamp),
+        itemName: event.itemName,
+        isRareItem: event.isRare,
+        points: event.points
+      })
+      CREATE (e)-[:PERFORMED_BY]->(player)
+      CREATE (e)-[:PART_OF]->(txn)
+      
+      MERGE (item:Item {itemId: event.itemId})
+      SET item.name = event.itemName,
+          item.isRare = event.isRare
+      CREATE (e)-[:ADDED]->(item)
+      
+      WITH e, event
+      WHERE event.hasLocation = true
+      
+      CREATE (location:Location {
+        x: event.locationX,
+        y: event.locationY, 
+        plane: event.locationPlane
+      })
+      CREATE (e)-[:LOCATED_AT]->(location)
+    `, params);
+  });
+}
+
+// Batch process HIT_SPLAT events
+async function batchProcessHitSplats(session, events, txn_uuid, data_uuid, account, playerId) {
+  const params = {
+    txn_uuid,
+    account,
+    playerId,
+    events: events.map(event => ({
+      event_uuid: `${data_uuid}_${event.index}`,
+      timestamp: event.timestamp,
+      damage: event.details.damage,
+      target: event.details.target,
+      points: event.points || 0,
+      hasLocation: !!event.playerLocation,
+      locationX: event.playerLocation?.x,
+      locationY: event.playerLocation?.y,
+      locationPlane: event.playerLocation?.plane
+    }))
+  };
+
+  return session.executeWrite(tx => {
+    return tx.run(`
+      MATCH (txn:Transaction {uuid: $txn_uuid})
+      MATCH (player:Player {account: $account, playerId: $playerId})
+      
+      UNWIND $events AS event
+      
+      CREATE (e:CombatEvent {
+        uuid: event.event_uuid,
+        eventType: 'HIT_SPLAT',
+        timestamp: datetime(event.timestamp),
+        damage: event.damage,
+        target: event.target,
+        points: event.points
+      })
+      CREATE (e)-[:PERFORMED_BY]->(player)
+      CREATE (e)-[:PART_OF]->(txn)
+      
+      WITH e, event, player
+      
+      // Create location if available
+      CALL {
+        WITH e, event
+        WHERE event.hasLocation = true
+        CREATE (location:Location {
+          x: event.locationX,
+          y: event.locationY, 
+          plane: event.locationPlane
+        })
+        CREATE (e)-[:LOCATED_AT]->(location)
+        RETURN count(*) as locationCreated
+      }
+      
+      // Try to link to target if it exists
+      CALL {
+        WITH e, event, player
+        OPTIONAL MATCH (target)
+        WHERE 
+          (target:Player AND target.name = event.target) OR 
+          (target:Character AND target.name = event.target)
+        WITH e, target
+        WHERE target IS NOT NULL
+        CREATE (e)-[:TARGETED]->(target)
+        RETURN count(*) as targetLinked
+      }
+      
+      RETURN e
+    `, params);
+  });
+}
+
+// Batch process WORLD_CHANGE events
+async function batchProcessWorldChanges(session, events, txn_uuid, data_uuid, account, playerId) {
+  const params = {
+    txn_uuid,
+    account,
+    playerId,
+    events: events.map(event => ({
+      event_uuid: `${data_uuid}_${event.index}`,
+      timestamp: event.timestamp,
+      points: event.points || 0,
+      hasLocation: !!event.playerLocation,
+      locationX: event.playerLocation?.x,
+      locationY: event.playerLocation?.y,
+      locationPlane: event.playerLocation?.plane
+    }))
+  };
+
+  return session.executeWrite(tx => {
+    return tx.run(`
+      MATCH (txn:Transaction {uuid: $txn_uuid})
+      MATCH (player:Player {account: $account, playerId: $playerId})
+      
+      UNWIND $events AS event
+      
+      CREATE (e:WorldChangeEvent {
+        uuid: event.event_uuid,
+        eventType: 'WORLD_CHANGE',
+        timestamp: datetime(event.timestamp),
+        points: event.points
+      })
+      CREATE (e)-[:PERFORMED_BY]->(player)
+      CREATE (e)-[:PART_OF]->(txn)
+      
+      WITH e, event
+      WHERE event.hasLocation = true
+      
+      CREATE (location:Location {
+        x: event.locationX,
+        y: event.locationY, 
+        plane: event.locationPlane
+      })
+      CREATE (e)-[:LOCATED_AT]->(location)
+    `, params);
+  });
+}
+
+// Batch process QUEST_COMPLETION events
+async function batchProcessQuestCompletions(session, events, txn_uuid, data_uuid, account, playerId) {
+  const params = {
+    txn_uuid,
+    account,
+    playerId,
+    events: events.map(event => ({
+      event_uuid: `${data_uuid}_${event.index}`,
+      timestamp: event.timestamp,
+      questName: event.details.questName,
+      points: event.points || 0,
+      hasLocation: !!event.playerLocation,
+      locationX: event.playerLocation?.x,
+      locationY: event.playerLocation?.y,
+      locationPlane: event.playerLocation?.plane
+    }))
+  };
+
+  return session.executeWrite(tx => {
+    return tx.run(`
+      MATCH (txn:Transaction {uuid: $txn_uuid})
+      MATCH (player:Player {account: $account, playerId: $playerId})
+      
+      UNWIND $events AS event
+      
+      CREATE (e:QuestCompletionEvent {
+        uuid: event.event_uuid,
+        eventType: 'QUEST_COMPLETION',
+        timestamp: datetime(event.timestamp),
+        questName: event.questName,
+        points: event.points
+      })
+      CREATE (e)-[:PERFORMED_BY]->(player)
+      CREATE (e)-[:PART_OF]->(txn)
+      
+      MERGE (quest:Quest {name: event.questName})
+      CREATE (e)-[:COMPLETED]->(quest)
+      
+      WITH e, event
+      WHERE event.hasLocation = true
+      
+      CREATE (location:Location {
+        x: event.locationX,
+        y: event.locationY, 
+        plane: event.locationPlane
+      })
+      CREATE (e)-[:LOCATED_AT]->(location)
+    `, params);
+  });
+}
+
+// Batch process ACHIEVEMENT_DIARY_COMPLETION events
+async function batchProcessAchievementDiaries(session, events, txn_uuid, data_uuid, account, playerId) {
+  const params = {
+    txn_uuid,
+    account,
+    playerId,
+    events: events.map(event => ({
+      event_uuid: `${data_uuid}_${event.index}`,
+      timestamp: event.timestamp,
+      diaryName: event.details.diaryName,
+      diaryTier: event.details.diaryTier,
+      message: event.details.message,
+      points: event.points || 0,
+      hasLocation: !!event.playerLocation,
+      locationX: event.playerLocation?.x,
+      locationY: event.playerLocation?.y,
+      locationPlane: event.playerLocation?.plane
+    }))
+  };
+
+  return session.executeWrite(tx => {
+    return tx.run(`
+      MATCH (txn:Transaction {uuid: $txn_uuid})
+      MATCH (player:Player {account: $account, playerId: $playerId})
+      
+      UNWIND $events AS event
+      
+      CREATE (e:AchievementDiaryEvent {
+        uuid: event.event_uuid,
+        eventType: 'ACHIEVEMENT_DIARY_COMPLETION',
+        timestamp: datetime(event.timestamp),
+        diaryName: event.diaryName,
+        diaryTier: event.diaryTier,
+        message: event.message,
+        points: event.points
+      })
+      CREATE (e)-[:PERFORMED_BY]->(player)
+      CREATE (e)-[:PART_OF]->(txn)
+      
+      MERGE (diary:AchievementDiary {name: event.diaryName})
+      SET diary.tier = event.diaryTier
+      CREATE (e)-[:COMPLETED]->(diary)
+      
+      WITH e, event
+      WHERE event.hasLocation = true
+      
+      CREATE (location:Location {
+        x: event.locationX,
+        y: event.locationY, 
+        plane: event.locationPlane
+      })
+      CREATE (e)-[:LOCATED_AT]->(location)
+    `, params);
+  });
+}
+
+// Batch process COMBAT_ACHIEVEMENT_COMPLETION events
+async function batchProcessCombatAchievements(session, events, txn_uuid, data_uuid, account, playerId) {
+  const params = {
+    txn_uuid,
+    account,
+    playerId,
+    events: events.map(event => ({
+      event_uuid: `${data_uuid}_${event.index}`,
+      timestamp: event.timestamp,
+      achievementName: event.details.achievementName,
+      message: event.details.message,
+      points: event.points || 0,
+      hasLocation: !!event.playerLocation,
+      locationX: event.playerLocation?.x,
+      locationY: event.playerLocation?.y,
+      locationPlane: event.playerLocation?.plane
+    }))
+  };
+
+  return session.executeWrite(tx => {
+    return tx.run(`
+      MATCH (txn:Transaction {uuid: $txn_uuid})
+      MATCH (player:Player {account: $account, playerId: $playerId})
+      
+      UNWIND $events AS event
+      
+      CREATE (e:CombatAchievementEvent {
+        uuid: event.event_uuid,
+        eventType: 'COMBAT_ACHIEVEMENT_COMPLETION',
+        timestamp: datetime(event.timestamp),
+        achievementName: event.achievementName,
+        message: event.message,
+        points: event.points
+      })
+      CREATE (e)-[:PERFORMED_BY]->(player)
+      CREATE (e)-[:PART_OF]->(txn)
+      
+      MERGE (achievement:CombatAchievement {name: event.achievementName})
+      CREATE (e)-[:COMPLETED]->(achievement)
+      
+      WITH e, event
+      WHERE event.hasLocation = true
+      
+      CREATE (location:Location {
+        x: event.locationX,
+        y: event.locationY, 
+        plane: event.locationPlane
+      })
+      CREATE (e)-[:LOCATED_AT]->(location)
+    `, params);
+  });
+}
+
+// Process generic events that don't fit into standard categories
+async function batchProcessGenericEvents(session, events, txn_uuid, data_uuid, account, playerId) {
+  const params = {
+    txn_uuid,
+    account,
+    playerId,
+    events: events.map(event => ({
+      event_uuid: `${data_uuid}_${event.index}`,
+      timestamp: event.timestamp,
+      eventType: event.eventType,
+      details: JSON.stringify(event.details),
+      points: event.points || 0,
+      hasLocation: !!event.playerLocation,
+      locationX: event.playerLocation?.x,
+      locationY: event.playerLocation?.y,
+      locationPlane: event.playerLocation?.plane
+    }))
+  };
+
+  return session.executeWrite(tx => {
+    return tx.run(`
+      MATCH (txn:Transaction {uuid: $txn_uuid})
+      MATCH (player:Player {account: $account, playerId: $playerId})
+      
+      UNWIND $events AS event
+      
+      CREATE (e:GameEvent {
+        uuid: event.event_uuid,
+        eventType: event.eventType,
+        timestamp: datetime(event.timestamp),
+        details: event.details,
+        points: event.points
+      })
+      CREATE (e)-[:PERFORMED_BY]->(player)
+      CREATE (e)-[:PART_OF]->(txn)
+      
+      WITH e, event
+      WHERE event.hasLocation = true
+      
+      CREATE (location:Location {
+        x: event.locationX,
+        y: event.locationY, 
+        plane: event.locationPlane
+      })
+      CREATE (e)-[:LOCATED_AT]->(location)
+    `, params);
+  });
 }
 
 // API endpoint for creating new game data
