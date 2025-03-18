@@ -657,6 +657,7 @@ async function batchProcessInventoryChanges(session, events, txn_uuid, data_uuid
 }
 
 // Batch process HIT_SPLAT events
+// Batch process HIT_SPLAT events - fixed version
 async function batchProcessHitSplats(session, events, txn_uuid, data_uuid, account, playerId) {
   const params = {
     txn_uuid,
@@ -682,6 +683,7 @@ async function batchProcessHitSplats(session, events, txn_uuid, data_uuid, accou
       
       UNWIND $events AS event
       
+      // Create combat event
       CREATE (e:CombatEvent {
         uuid: event.event_uuid,
         eventType: 'HIT_SPLAT',
@@ -693,35 +695,28 @@ async function batchProcessHitSplats(session, events, txn_uuid, data_uuid, accou
       CREATE (e)-[:PERFORMED_BY]->(player)
       CREATE (e)-[:PART_OF]->(txn)
       
-      WITH e, event, player
+      // Handle locations
+      WITH e, event
+      WHERE event.hasLocation = true
+      CREATE (location:Location {
+        x: event.locationX,
+        y: event.locationY, 
+        plane: event.locationPlane
+      })
+      CREATE (e)-[:LOCATED_AT]->(location)
       
-      // Create location if available
-      CALL {
-        WITH e, event
-        WHERE event.hasLocation = true
-        CREATE (location:Location {
-          x: event.locationX,
-          y: event.locationY, 
-          plane: event.locationPlane
-        })
-        CREATE (e)-[:LOCATED_AT]->(location)
-        RETURN count(*) as locationCreated
-      }
+      // Return all events for the next operation
+      WITH collect(e) as allEvents
       
-      // Try to link to target if it exists
-      CALL {
-        WITH e, event, player
-        OPTIONAL MATCH (target)
-        WHERE 
-          (target:Player AND target.name = event.target) OR 
-          (target:Character AND target.name = event.target)
-        WITH e, target
-        WHERE target IS NOT NULL
-        CREATE (e)-[:TARGETED]->(target)
-        RETURN count(*) as targetLinked
-      }
-      
-      RETURN e
+      UNWIND allEvents as e
+      // Try to link to targets - this is done separately since we can't mix WITH + WHERE + OPTIONAL MATCH
+      OPTIONAL MATCH (target)
+      WHERE 
+        (target:Player AND target.name = e.target) OR 
+        (target:Character AND target.name = e.target)
+      WITH e, target
+      WHERE target IS NOT NULL
+      CREATE (e)-[:TARGETED]->(target)
     `, params);
   });
 }
