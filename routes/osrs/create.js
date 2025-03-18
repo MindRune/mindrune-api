@@ -328,28 +328,51 @@ async function calculatePoints(events, isNewPlayer, seasonConfig) {
 }
 
 // Helper function to insert data into Neo4j
+// Helper function to insert data into Neo4j
 async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
+  const neo4jStartTime = Date.now();
+  console.log(`[${new Date().toISOString()}] Starting insertIntoNeo4j for account: ${account}`);
+  
   const session = driver.session();
 
   try {
     // Extract player info and events
     let playerInfo = data[0];
     let events = data.slice(1);
+    console.log(`[${new Date().toISOString()}] Processing ${events.length} events`);
 
     // Check if this is a new player
+    const isPlayerNewStartTime = Date.now();
+    console.log(`[${new Date().toISOString()}] Checking if player is new`);
+    
     const isPlayerNew = await isNewPlayer(account, playerInfo.playerId);
+    
+    console.log(`[${new Date().toISOString()}] isNewPlayer check completed in ${Date.now() - isPlayerNewStartTime}ms, result: ${isPlayerNew}`);
 
     // Get current season configuration
+    const seasonConfigStartTime = Date.now();
+    console.log(`[${new Date().toISOString()}] Getting season config`);
+    
     const seasonConfig = await getSeasonConfig();
+    
+    console.log(`[${new Date().toISOString()}] Season config retrieved in ${Date.now() - seasonConfigStartTime}ms`);
 
     // Calculate points for this transaction
+    const pointsCalculationStartTime = Date.now();
+    console.log(`[${new Date().toISOString()}] Starting points calculation for ${events.length} events`);
+    
     const totalPoints = await calculatePoints(
       events,
       isPlayerNew,
       seasonConfig
     );
+    
+    console.log(`[${new Date().toISOString()}] Points calculation completed in ${Date.now() - pointsCalculationStartTime}ms, total points: ${totalPoints}`);
 
     // Create Player node based on both account and playerId
+    const playerNodeStartTime = Date.now();
+    console.log(`[${new Date().toISOString()}] Creating/updating player node`);
+    
     await session.executeWrite((tx) => {
       return tx.run(
         `
@@ -367,8 +390,13 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
         }
       );
     });
+    
+    console.log(`[${new Date().toISOString()}] Player node operation completed in ${Date.now() - playerNodeStartTime}ms`);
 
     // Create Transaction node with points and link to the correct player
+    const txnNodeStartTime = Date.now();
+    console.log(`[${new Date().toISOString()}] Creating transaction node`);
+    
     await session.executeWrite((tx) => {
       return tx.run(
         `
@@ -394,11 +422,18 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
         }
       );
     });
+    
+    console.log(`[${new Date().toISOString()}] Transaction node created in ${Date.now() - txnNodeStartTime}ms`);
 
     // Process each event
+    const eventsProcessingStartTime = Date.now();
+    console.log(`[${new Date().toISOString()}] Starting to process ${events.length} events`);
+    
     for (let i = 0; i < events.length; i++) {
+      const eventStartTime = Date.now();
       const event = events[i];
-
+      console.log(`[${new Date().toISOString()}] Processing event ${i+1}/${events.length}, type: ${event.eventType}`);
+      
       // Base event properties
       const eventParams = {
         event_uuid: `${data_uuid}_${i}`,
@@ -505,7 +540,6 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
           });
           break;
 
-        // Inside your event processing loop in insertIntoNeo4j function
         case "INVENTORY_CHANGE":
           // Check if the item is rare before the transaction
           let isRare = false;
@@ -817,7 +851,12 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
             );
           });
       }
+      
+      console.log(`[${new Date().toISOString()}] Event ${i+1} (${event.eventType}) processed in ${Date.now() - eventStartTime}ms`);
     }
+    
+    console.log(`[${new Date().toISOString()}] All events processed in ${Date.now() - eventsProcessingStartTime}ms`);
+    console.log(`[${new Date().toISOString()}] Total Neo4j operation time: ${Date.now() - neo4jStartTime}ms`);
 
     return {
       success: true,
@@ -826,10 +865,11 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
       isNewPlayer: isPlayerNew,
     };
   } catch (error) {
-    console.error("Error inserting into Neo4j:", error);
+    console.error(`[${new Date().toISOString()}] Error in Neo4j operations after ${Date.now() - neo4jStartTime}ms:`, error);
     throw error;
   } finally {
     await session.close();
+    console.log(`[${new Date().toISOString()}] Neo4j session closed after ${Date.now() - neo4jStartTime}ms`);
   }
 }
 
@@ -838,6 +878,9 @@ router.post(
   "/",
   web3passport.authenticate("jwt", { session: false }),
   async function (req, res) {
+    const startTime = Date.now();
+    console.log(`[${new Date().toISOString()}] Starting create request for account: ${req.user?.[0]?.account}`);
+    
     try {
       let account = req.user[0].account;
       let data = req.body;
@@ -846,12 +889,20 @@ router.post(
       let keywords = `MindRune, ${account}`; // Add default keywords
       let txn_description = `A txn to mint an action of player for ${account}`; // Add default description
 
+      // Spam protection timing
+      const spamCheckStartTime = Date.now();
+      console.log(`[${new Date().toISOString()}] Starting spam protection check for ${account}`);
+      
       let permission = await spamProtection
         .getData(request, account)
         .then(async ({ permission }) => {
+          console.log(`[${new Date().toISOString()}] Spam protection check completed in ${Date.now() - spamCheckStartTime}ms`);
           return permission;
         })
-        .catch((error) => console.log(`Error : ${error}`));
+        .catch((error) => {
+          console.log(`Error in spam protection: ${error}`);
+          console.log(`[${new Date().toISOString()}] Spam protection check failed after ${Date.now() - spamCheckStartTime}ms`);
+        });
 
       if (permission == `block`) {
         console.log(`Request frequency limit hit from ${account}`);
@@ -871,11 +922,18 @@ router.post(
         return;
       }
 
+      // JSON validation timing
+      const jsonValidationStartTime = Date.now();
+      console.log(`[${new Date().toISOString()}] Starting JSON validation`);
+      
       const valid_json = await isJsonString(
         typeof data === "string" || data instanceof String
           ? data
           : JSON.stringify(data)
       );
+      
+      console.log(`[${new Date().toISOString()}] JSON validation completed in ${Date.now() - jsonValidationStartTime}ms`);
+      
       if (valid_json === "false") {
         console.log(`Create request with bad data from ${account}`);
         res.status(400).json({
@@ -888,14 +946,30 @@ router.post(
       let txn_uuid = uuidv4();
       let data_uuid = uuidv4();
 
+      // Neo4j insertion timing
+      const neo4jStartTime = Date.now();
+      console.log(`[${new Date().toISOString()}] Starting Neo4j data insertion`);
+      console.log(`[${new Date().toISOString()}] Data size: ${typeof data === "string" ? data.length : JSON.stringify(data).length} bytes`);
+      console.log(`[${new Date().toISOString()}] Event count: ${data.length - 1}`); // First item is player info
+      
       // Insert data into Neo4j
       const result = await insertIntoNeo4j(data, txn_uuid, data_uuid, account);
+      
+      console.log(`[${new Date().toISOString()}] Neo4j insertion completed in ${Date.now() - neo4jStartTime}ms`);
 
       // Use calculated points instead of random
       let points = result.totalPoints;
 
+      // SQL insertion timing
+      const sqlStartTime = Date.now();
+      console.log(`[${new Date().toISOString()}] Starting SQL insertion`);
+      
       // Only insert into SQL if db is defined
       if (db) {
+        // First SQL query timing
+        const sqlQuery1StartTime = Date.now();
+        console.log(`[${new Date().toISOString()}] Starting first SQL query (txn_header)`);
+        
         query = `INSERT INTO txn_header (txn_id, progress, request, miner, receiver, blockchain, txn_description, data_id, ual, paranet_ual, keywords, epochs, txn_hash, txn_fee, trac_fee, bid, points) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`;
         params = [
           txn_uuid,
@@ -920,12 +994,19 @@ router.post(
         await queryDB
           .getData(query, params, db)
           .then((results) => {
+            console.log(`[${new Date().toISOString()}] First SQL query completed in ${Date.now() - sqlQuery1StartTime}ms`);
             return results;
           })
           .catch((error) => {
             console.error("Error inserting transaction data:", error);
+            console.log(`[${new Date().toISOString()}] First SQL query failed after ${Date.now() - sqlQuery1StartTime}ms`);
           });
 
+        // Second SQL query timing
+        const sqlQuery2StartTime = Date.now();
+        console.log(`[${new Date().toISOString()}] Starting second SQL query (data_header)`);
+        console.log(`[${new Date().toISOString()}] Data size for SQL: ${typeof data === "string" ? data.length : JSON.stringify(data).length} bytes`);
+        
         query = `INSERT INTO data_header (data_id, asset_data) VALUES (?,?)`;
         params = [
           data_uuid,
@@ -937,13 +1018,21 @@ router.post(
         await queryDB
           .getData(query, params, db)
           .then((results) => {
+            console.log(`[${new Date().toISOString()}] Second SQL query completed in ${Date.now() - sqlQuery2StartTime}ms`);
             return results;
           })
           .catch((error) => {
             console.error("Error inserting asset data:", error);
+            console.log(`[${new Date().toISOString()}] Second SQL query failed after ${Date.now() - sqlQuery2StartTime}ms`);
           });
       }
+      
+      console.log(`[${new Date().toISOString()}] All SQL operations completed in ${Date.now() - sqlStartTime}ms`);
 
+      // Response timing
+      console.log(`[${new Date().toISOString()}] Total request processing time: ${Date.now() - startTime}ms`);
+      console.log(`[${new Date().toISOString()}] Sending response with points: ${points}`);
+      
       // Include point breakdown in response
       res.status(200).json({
         success: true,
@@ -954,7 +1043,7 @@ router.post(
         eventCount: result.eventCount,
       });
     } catch (e) {
-      console.log(e);
+      console.log(`[${new Date().toISOString()}] Error processing request after ${Date.now() - startTime}ms:`, e);
       res.status(500).json({
         success: false,
         msg: `Oops, something went wrong! Please try again later.`,
