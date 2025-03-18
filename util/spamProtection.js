@@ -58,7 +58,7 @@ module.exports = async function actionSpam(request, account) {
       FROM txn_header
       WHERE receiver = ?
       AND request = 'create'
-      AND created_at >= DATE_SUB(NOW(), INTERVAL 59 SECOND)
+      AND created_at >= DATE_SUB(NOW(), INTERVAL 50 SECOND)
     `;
     const create_params = [account];
    
