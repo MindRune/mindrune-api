@@ -257,63 +257,43 @@ async function calculatePoints(events, isNewPlayer, seasonConfig) {
     if (event.playerLocation) points *= 1.1;
 
     // Event-specific bonuses - all the combat damage checks
-    if (
-      scoreEventType === "CombatEvent" &&
-      event.details &&
-      event.details.damage > 10
-    ) {
-      points *= 1.05;
-    }
-    if (
-      scoreEventType === "CombatEvent" &&
-      event.details &&
-      event.details.damage > 20
-    ) {
-      points *= 1.1;
-    }
-    if (
-      scoreEventType === "CombatEvent" &&
-      event.details &&
-      event.details.damage > 30
-    ) {
-      points *= 1.2;
-    }
-    if (
-      scoreEventType === "CombatEvent" &&
-      event.details &&
-      event.details.damage > 40
-    ) {
-      points *= 1.3;
-    }
-    if (
-      scoreEventType === "CombatEvent" &&
-      event.details &&
-      event.details.damage > 50
-    ) {
-      points *= 1.4;
+    if (scoreEventType === "CombatEvent" && event.details) {
+      const damage = Number(event.details.damage);
+      
+      switch (true) {
+        case damage > 50:
+          points += damage * 1.4;
+          break;
+        case damage > 40:
+          points += damage * 1.3;
+          break;
+        case damage > 30:
+          points += damage * 1.2;
+          break;
+        case damage > 20:
+          points += damage * 1.1;
+          break;
+        case damage > 10:
+          points += damage * 1.05;
+          break;
+      }
     }
 
     // XP gain checks
-    if (
-      scoreEventType === "XpGainEvent" &&
-      event.details &&
-      event.details.xpGained > 50
-    ) {
-      points *= 1.1;
-    }
-    if (
-      scoreEventType === "XpGainEvent" &&
-      event.details &&
-      event.details.xpGained > 100
-    ) {
-      points *= 1.2;
-    }
-    if (
-      scoreEventType === "XpGainEvent" &&
-      event.details &&
-      event.details.xpGained > 200
-    ) {
-      points *= 1.3;
+    if (scoreEventType === "XpGainEvent" && event.details) {
+      const xpGained = Number(event.details.xpGained);
+      
+      switch (true) {
+        case xpGained > 200:
+          points *= 1.3;
+          break;
+        case xpGained > 100:
+          points *= 1.2;
+          break;
+        case xpGained > 50:
+          points *= 1.1;
+          break;
+      }
     }
 
     // if (
