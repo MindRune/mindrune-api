@@ -448,15 +448,36 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
 
 // Batch process MENU_CLICK events
 async function batchProcessMenuClicks(session, events, txn_uuid, data_uuid, account, playerId) {
+  // Process events to extract actual character names (without level) and check for level presence
+  const processedEvents = events.map(event => {
+    let cleanedTarget = event.details.target;
+    let hasLevel = false;
+    
+    // Check if target contains level information (e.g., "Goblin (level 2)")
+    if (cleanedTarget && cleanedTarget.includes("(level ")) {
+      hasLevel = true;
+      // Extract name without the level part
+      cleanedTarget = cleanedTarget.split("(level ")[0].trim();
+    }
+    
+    return {
+      ...event,
+      cleanedTarget,
+      hasLevel
+    };
+  });
+
   const params = {
     txn_uuid,
     account,
     playerId,
-    events: events.map(event => ({
+    events: processedEvents.map(event => ({
       event_uuid: `${data_uuid}_${event.index}`,
       timestamp: event.timestamp,
       action: event.details.action,
       target: event.details.target,
+      cleanedTarget: event.cleanedTarget,
+      hasLevel: event.hasLevel,
       points: event.points || 0,
       hasLocation: !!event.playerLocation,
       locationX: event.playerLocation?.x,
@@ -464,14 +485,14 @@ async function batchProcessMenuClicks(session, events, txn_uuid, data_uuid, acco
       locationPlane: event.playerLocation?.plane
     }))
   };
-
+  
   return session.executeWrite(tx => {
     return tx.run(`
       MATCH (txn:Transaction {uuid: $txn_uuid})
       MATCH (player:Player {account: $account, playerId: $playerId})
-      
+     
       UNWIND $events AS event
-      
+     
       CREATE (e:MenuClickEvent {
         uuid: event.event_uuid,
         eventType: 'MENU_CLICK',
@@ -483,12 +504,34 @@ async function batchProcessMenuClicks(session, events, txn_uuid, data_uuid, acco
       CREATE (e)-[:PERFORMED_BY]->(player)
       CREATE (e)-[:PART_OF]->(txn)
       
+      // Create or find Character target when there's a valid target with level
+      WITH e, event, player
+      WHERE event.cleanedTarget IS NOT NULL AND event.cleanedTarget <> "" AND event.hasLevel = true
+      
+      // First check if target is a player
+      OPTIONAL MATCH (existingTarget:Player {name: event.cleanedTarget})
+      
+      // If it's not a player and has a level, create or find a Character node
+      WITH e, event, player, existingTarget
+      WHERE existingTarget IS NULL
+      
+      MERGE (character:Character {name: event.cleanedTarget})
+      ON CREATE SET character.color = "#964B00"
+      CREATE (e)-[:INTERACTED_WITH]->(character)
+      
+      // If it was a player, link to that instead
+      WITH e, event, player, existingTarget 
+      WHERE existingTarget IS NOT NULL
+      
+      CREATE (e)-[:INTERACTED_WITH]->(existingTarget)
+      
+      // Handle locations (using MERGE to prevent duplicates)
       WITH e, event
       WHERE event.hasLocation = true
-      
-      CREATE (location:Location {
+     
+      MERGE (location:Location {
         x: event.locationX,
-        y: event.locationY, 
+        y: event.locationY,
         plane: event.locationPlane
       })
       CREATE (e)-[:LOCATED_AT]->(location)
@@ -617,8 +660,6 @@ async function batchProcessInventoryChanges(session, events, txn_uuid, data_uuid
   });
 }
 
-// Batch process HIT_SPLAT events
-// Batch process HIT_SPLAT events - fixed version
 async function batchProcessHitSplats(session, events, txn_uuid, data_uuid, account, playerId) {
   const params = {
     txn_uuid,
@@ -656,28 +697,37 @@ async function batchProcessHitSplats(session, events, txn_uuid, data_uuid, accou
       CREATE (e)-[:PERFORMED_BY]->(player)
       CREATE (e)-[:PART_OF]->(txn)
       
+      // Create or find Character target (if not a player)
+      WITH e, event, player
+      WHERE event.target IS NOT NULL AND event.target <> ""
+      
+      // First try to find an existing player with this name
+      OPTIONAL MATCH (existingTarget:Player {name: event.target})
+      
+      // If target is not a player, create or merge a Character node
+      WITH e, event, player, existingTarget
+      WHERE existingTarget IS NULL
+      
+      MERGE (character:Character {name: event.target})
+      ON CREATE SET character.color = "#964B00"
+      CREATE (e)-[:TARGETED]->(character)
+      
+      // If the target was a player, link to that instead
+      WITH e, event, player, existingTarget
+      WHERE existingTarget IS NOT NULL
+      
+      CREATE (e)-[:TARGETED]->(existingTarget)
+      
       // Handle locations
       WITH e, event
       WHERE event.hasLocation = true
+      
       CREATE (location:Location {
         x: event.locationX,
         y: event.locationY, 
         plane: event.locationPlane
       })
       CREATE (e)-[:LOCATED_AT]->(location)
-      
-      // Return all events for the next operation
-      WITH collect(e) as allEvents
-      
-      UNWIND allEvents as e
-      // Try to link to targets - this is done separately since we can't mix WITH + WHERE + OPTIONAL MATCH
-      OPTIONAL MATCH (target)
-      WHERE 
-        (target:Player AND target.name = e.target) OR 
-        (target:Character AND target.name = e.target)
-      WITH e, target
-      WHERE target IS NOT NULL
-      CREATE (e)-[:TARGETED]->(target)
     `, params);
   });
 }
