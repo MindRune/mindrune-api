@@ -180,7 +180,7 @@ async function calculatePoints(events, seasonConfig) {
     let scoreEventType;
 
     switch (event.eventType) {
-      case "HIT_SPLAT":
+      case "COMBAT_HIT":
         scoreEventType = "CombatEvent";
         break;
       case "XP_GAIN":
@@ -402,8 +402,8 @@ async function insertIntoNeo4j(data, txn_uuid, data_uuid, account) {
           await batchProcessInventoryChanges(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
           break;
           
-        case "HIT_SPLAT":
-          await batchProcessHitSplats(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
+        case "COMBAT_HIT":
+          await batchProcessCombatHits(session, eventsOfType, txn_uuid, data_uuid, account, playerInfo.playerId);
           break;
           
         case "WORLD_CHANGE":
@@ -660,7 +660,7 @@ async function batchProcessInventoryChanges(session, events, txn_uuid, data_uuid
   });
 }
 
-async function batchProcessHitSplats(session, events, txn_uuid, data_uuid, account, playerId) {
+async function batchProcessCombatHits(session, events, txn_uuid, data_uuid, account, playerId) {
   const params = {
     txn_uuid,
     account,
@@ -668,8 +668,15 @@ async function batchProcessHitSplats(session, events, txn_uuid, data_uuid, accou
     events: events.map(event => ({
       event_uuid: `${data_uuid}_${event.index}`,
       timestamp: event.timestamp,
-      damage: event.details.damage,
-      target: event.details.target,
+      damage: event.details.damage || 0,
+      // New fields from improved combat tracking
+      type: event.details.type || 'UNKNOWN',
+      source: event.details.source || 'UNKNOWN',
+      sourceType: event.details.sourceType || 'UNKNOWN',
+      sourceId: event.details.sourceId || null,
+      target: event.details.target || 'UNKNOWN',
+      targetType: event.details.targetType || 'UNKNOWN',
+      targetId: event.details.targetId || null,
       points: event.points || 0,
       hasLocation: !!event.playerLocation,
       locationX: event.playerLocation?.x,
@@ -688,37 +695,62 @@ async function batchProcessHitSplats(session, events, txn_uuid, data_uuid, accou
       // Create combat event
       CREATE (e:CombatEvent {
         uuid: event.event_uuid,
-        eventType: 'HIT_SPLAT',
+        eventType: 'COMBAT_HIT',
         timestamp: datetime(event.timestamp),
         damage: event.damage,
-        target: event.target,
+        type: event.type,
+        sourceType: event.sourceType,
+        targetType: event.targetType,
         points: event.points
       })
       CREATE (e)-[:PERFORMED_BY]->(player)
       CREATE (e)-[:PART_OF]->(txn)
       
-      // Create or find Character target (if not a player)
+      // Handle the source entity (who did the damage)
       WITH e, event, player
-      WHERE event.target IS NOT NULL AND event.target <> ""
       
-      // First try to find an existing player with this name
-      OPTIONAL MATCH (existingTarget:Player {name: event.target})
+      // If source is a player (the user)
+      WITH e, event, player
+      WHERE event.source = 'PLAYER' OR event.sourceType = 'PLAYER'
       
-      // If target is not a player, create or merge a Character node
-      WITH e, event, player, existingTarget
-      WHERE existingTarget IS NULL
+      // Link the event to show the player as the source
+      CREATE (e)-[:SOURCE]->(player)
       
-      MERGE (character:Character {name: event.target})
-      ON CREATE SET character.color = "#964B00"
-      CREATE (e)-[:TARGETED]->(character)
+      // Handle the source when it's an NPC
+      WITH e, event, player
+      WHERE event.sourceType = 'NPC' AND event.source <> 'PLAYER' AND event.source <> 'UNKNOWN'
       
-      // If the target was a player, link to that instead
-      WITH e, event, player, existingTarget
-      WHERE existingTarget IS NOT NULL
+      // Create or find the NPC character node
+      MERGE (source:Character {name: event.source})
+      ON CREATE SET 
+        source.color = "#964B00",
+        source.characterType = "NPC",
+        source.id = event.sourceId
+      CREATE (e)-[:SOURCE]->(source)
       
-      CREATE (e)-[:TARGETED]->(existingTarget)
+      // Handle the target entity (who received the damage)
+      WITH e, event, player
       
-      // Handle locations
+      // If target is a player (the user)
+      WITH e, event, player
+      WHERE event.target = 'PLAYER' OR event.targetType = 'PLAYER'
+      
+      // Link the event to show the player as the target
+      CREATE (e)-[:TARGET]->(player)
+      
+      // If target is an NPC
+      WITH e, event, player
+      WHERE event.targetType = 'NPC' AND event.target <> 'PLAYER' AND event.target <> 'UNKNOWN'
+      
+      // Create or find the NPC character node
+      MERGE (target:Character {name: event.target})
+      ON CREATE SET 
+        target.color = "#964B00",
+        target.characterType = "NPC",
+        target.id = event.targetId
+      CREATE (e)-[:TARGET]->(target)
+      
+      // Handle location
       WITH e, event
       WHERE event.hasLocation = true
       
