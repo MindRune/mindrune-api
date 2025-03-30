@@ -1,0 +1,1 @@
+{"version":3,"file":"neo4j.types.js","sourceRoot":"","sources":["../../src/types/neo4j.types.ts"],"names":[],"mappings":";;;AA+IA;;GAEG;AACH,MAAa,UAAW,SAAQ,KAAK;IACnC,YACE,OAAe,EACR,KAAc,EACd,MAAe;QAEtB,KAAK,CAAC,OAAO,CAAC,CAAC;QAHR,UAAK,GAAL,KAAK,CAAS;QACd,WAAM,GAAN,MAAM,CAAS;QAGtB,IAAI,CAAC,IAAI,GAAG,YAAY,CAAC;IAC3B,CAAC;CACF;AATD,gCASC"}
