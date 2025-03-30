@@ -35,37 +35,49 @@ export const batchProcessAchievementDiaries = async (
     }))
   };
 
-  return await session.executeWrite(tx => {
-    return tx.run(`
-      MATCH (player:Player {account: $account, playerId: $playerId})
-      
-      UNWIND $events AS event
-      
-      CREATE (e:AchievementDiaryEvent {
-        uuid: event.event_uuid,
-        eventType: 'ACHIEVEMENT_DIARY_COMPLETION',
-        timestamp: datetime(event.timestamp),
-        diaryName: COALESCE(event.diaryName, 'Unknown Diary'),
-        diaryTier: event.diaryTier,
-        message: event.message
-      })
-      CREATE (e)-[:PERFORMED_BY]->(player)
-      
-      MERGE (diary:AchievementDiary {name: COALESCE(event.diaryName, 'Unknown Diary')})
-      SET diary.tier = event.diaryTier
-      CREATE (e)-[:COMPLETED]->(diary)
-      
-      // Handle locations
-      FOREACH (ignoreMe IN CASE WHEN event.hasLocation = true THEN [1] ELSE [] END |
-        MERGE (location:Location {
-          x: event.locationX,
-          y: event.locationY, 
-          plane: event.locationPlane
-        })
-        CREATE (e)-[:LOCATED_AT]->(location)
-      )
-    `, params);
-  });
+  try {
+    return await session.executeWrite(tx => {
+      return tx.run(`
+        MATCH (player:Player {account: $account, playerId: $playerId})
+        
+        UNWIND $events AS event
+        
+        // Check if an AchievementDiaryEvent for this diary and tier already exists
+        OPTIONAL MATCH (existingEvent:AchievementDiaryEvent {
+          diaryName: event.diaryName, 
+          diaryTier: event.diaryTier
+        })-[:PERFORMED_BY]->(player)
+        
+        // Only create a new event if one doesn't exist for this diary and tier
+        FOREACH (ignoreMe IN CASE WHEN existingEvent IS NULL THEN [1] ELSE [] END |
+          // Create the event with diary properties
+          CREATE (e:AchievementDiaryEvent {
+            uuid: event.event_uuid,
+            eventType: 'ACHIEVEMENT_DIARY_COMPLETION',
+            timestamp: datetime(event.timestamp),
+            diaryName: COALESCE(event.diaryName, 'Unknown Diary'),
+            diaryTier: event.diaryTier,
+            message: event.message
+          })
+          // Connect to player
+          CREATE (e)-[:PERFORMED_BY]->(player)
+          
+          // Handle locations
+          FOREACH (ignoreMe2 IN CASE WHEN event.hasLocation = true THEN [1] ELSE [] END |
+            MERGE (location:Location {
+              x: event.locationX,
+              y: event.locationY,
+              plane: event.locationPlane
+            })
+            CREATE (e)-[:LOCATED_AT]->(location)
+          )
+        )
+      `, params);
+    });
+  } catch (error) {
+    logger.error('Error processing achievement diaries:', error);
+    throw error;
+  }
 };
 
 export default batchProcessAchievementDiaries;

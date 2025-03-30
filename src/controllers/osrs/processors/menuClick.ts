@@ -260,7 +260,10 @@ export const batchProcessMenuClicks = async (
        
       FOREACH(ignoreMe IN CASE WHEN action = "Equip" OR action = "Wear" OR action = "Wield" THEN [1] ELSE [] END |
         CREATE (e)-[:EQUIPPED]->(item))
-       
+    
+      FOREACH(ignoreMe IN CASE WHEN action = "Unequip" OR action = "Remove" THEN [1] ELSE [] END |
+        CREATE (e)-[:UNEQUIPPED]->(item))
+
       FOREACH(ignoreMe IN CASE WHEN action = "Use" THEN [1] ELSE [] END |
         CREATE (e)-[:USED]->(item))
        
