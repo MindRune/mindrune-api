@@ -22,6 +22,7 @@ authMiddleware.initializePassport();
 import osrsRoutes from './routes/osrs';
 import authRoutes from './routes/auth';
 import userRoutes from './routes/user';
+import agentRoutes from './routes/agent';
 import imgRoutes from './routes/img';
 
 // Load environment variables
@@ -53,6 +54,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use('/osrs', osrsRoutes);
 app.use('/auth', authRoutes);
 app.use('/user', userRoutes);
+app.use('/agent', agentRoutes);
 app.use('/img', imgRoutes);
 
 // Health check endpoint

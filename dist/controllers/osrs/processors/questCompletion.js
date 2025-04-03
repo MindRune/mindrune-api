@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.batchProcessQuestCompletions = void 0;
+const logger_1 = __importDefault(require("../../../utils/logger"));
 /**
  * Process QUEST_COMPLETION events
  * @param session - Neo4j session
@@ -25,41 +29,51 @@ const batchProcessQuestCompletions = async (session, events, txnUuid, dataUuid, 
             locationPlane: event.playerLocation?.plane
         }))
     };
-    return await session.executeWrite(tx => {
-        return tx.run(`
-      MATCH (player:Player {account: $account, playerId: $playerId})
-      
-      UNWIND $events AS event
-      
-      CREATE (e:QuestCompletionEvent {
-        uuid: event.event_uuid,
-        eventType: 'QUEST_COMPLETION',
-        timestamp: datetime(event.timestamp),
-        questName: COALESCE(event.questName, 'Unknown Quest'),
-        questPoints: event.questPoints
-      })
-      CREATE (e)-[:PERFORMED_BY]->(player)
-      
-      MERGE (quest:Quest {name: COALESCE(event.questName, 'Unknown Quest')})
-      SET quest.questPoints = event.questPoints
-      CREATE (e)-[:COMPLETED]->(quest)
-      
-      // Update player quest points if available
-      FOREACH (ignoreMe IN CASE WHEN event.questPoints IS NOT NULL THEN [1] ELSE [] END |
-        SET player.questPoints = event.questPoints
-      )
-      
-      // Handle locations
-      FOREACH (ignoreMe IN CASE WHEN event.hasLocation = true THEN [1] ELSE [] END |
-        MERGE (location:Location {
-          x: event.locationX,
-          y: event.locationY, 
-          plane: event.locationPlane
-        })
-        CREATE (e)-[:LOCATED_AT]->(location)
-      )
-    `, params);
-    });
+    try {
+        return await session.executeWrite(tx => {
+            return tx.run(`
+        MATCH (player:Player {account: $account, playerId: $playerId})
+        
+        UNWIND $events AS event
+        
+        // Check if a QuestCompletionEvent for this quest already exists
+        OPTIONAL MATCH (existingEvent:QuestCompletionEvent {questName: event.questName})-[:PERFORMED_BY]->(player)
+        
+        // Only create a new event if one doesn't exist for this quest
+        FOREACH (ignoreMe IN CASE WHEN existingEvent IS NULL THEN [1] ELSE [] END |
+          // Create the event with quest name as a property
+          CREATE (e:QuestCompletionEvent {
+            uuid: event.event_uuid,
+            eventType: 'QUEST_COMPLETION',
+            timestamp: datetime(event.timestamp),
+            questName: COALESCE(event.questName, 'Unknown Quest'),
+            questPoints: event.questPoints
+          })
+          // Connect to player
+          CREATE (e)-[:PERFORMED_BY]->(player)
+          
+          // Update player quest points if available
+          FOREACH (ignoreMe2 IN CASE WHEN event.questPoints IS NOT NULL THEN [1] ELSE [] END |
+            SET player.questPoints = event.questPoints
+          )
+          
+          // Handle locations
+          FOREACH (ignoreMe2 IN CASE WHEN event.hasLocation = true THEN [1] ELSE [] END |
+            MERGE (location:Location {
+              x: event.locationX,
+              y: event.locationY,
+              plane: event.locationPlane
+            })
+            CREATE (e)-[:LOCATED_AT]->(location)
+          )
+        )
+      `, params);
+        });
+    }
+    catch (error) {
+        logger_1.default.error('Error processing quest completions:', error);
+        throw error;
+    }
 };
 exports.batchProcessQuestCompletions = batchProcessQuestCompletions;
 exports.default = exports.batchProcessQuestCompletions;

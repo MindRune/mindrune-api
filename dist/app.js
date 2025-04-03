@@ -24,6 +24,7 @@ auth_middleware_1.default.initializePassport();
 const osrs_1 = __importDefault(require("./routes/osrs"));
 const auth_1 = __importDefault(require("./routes/auth"));
 const user_1 = __importDefault(require("./routes/user"));
+const agent_1 = __importDefault(require("./routes/agent"));
 const img_1 = __importDefault(require("./routes/img"));
 // Load environment variables
 dotenv_1.default.config();
@@ -50,6 +51,7 @@ app.use('/api-docs', swagger_ui_express_1.default.serve, swagger_ui_express_1.de
 app.use('/osrs', osrs_1.default);
 app.use('/auth', auth_1.default);
 app.use('/user', user_1.default);
+app.use('/agent', agent_1.default);
 app.use('/img', img_1.default);
 // Health check endpoint
 app.get('/health', (req, res) => {
