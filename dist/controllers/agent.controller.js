@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const axios_1 = __importDefault(require("axios"));
 const logger_1 = __importDefault(require("../utils/logger"));
-const uuid_1 = require("uuid");
 // Get agent service URL from environment
 const AGENT_SERVICE_URL = process.env.AGENT_SERVICE_URL || "http://localhost:4000/agent";
 /**
@@ -44,46 +43,6 @@ class AgentController {
                 logger_1.default.info(`Forwarding agent request to external service for account: ${account}, player: ${playerId}`, {
                     service: "mindrune-agent",
                 });
-                // Generate unique identifiers
-                promptUuid = (0, uuid_1.v4)();
-                const timestamp = new Date().toISOString();
-                // First, insert account and prompt into Neo4j
-                await session.executeWrite(async (tx) => {
-                    // Merge account node or create if not exists
-                    await tx.run(`
-          MERGE (a:Account {account: $account})
-ON CREATE SET
-  a.createdAt = datetime($timestamp),
-  a.firstSeen = datetime($timestamp)
-ON MATCH SET
-  a.lastSeen = datetime($timestamp)
-
-// Create prompt event node with default success status
-CREATE (p:Prompt {
-  uuid: $promptUuid,
-  eventType: 'PROMPT',
-  timestamp: datetime($timestamp),
-  userQuery: $message,
-  cypherQuery: 'unknown',
-  agentResponse: 'unknown',
-  success: false
-})
-
-// Link prompt to account
-CREATE (p)-[:ASKED_BY]->(a)
-
-// Find and MERGE (not CREATE) relationships to players
-// This ensures we only create the relationship if it doesn't exist
-WITH a
-MATCH (player:Player {account: $account})
-MERGE (a)-[:HAS_PLAYER]->(player)
-        `, {
-                        account,
-                        promptUuid,
-                        timestamp,
-                        message,
-                    });
-                });
                 // Forward request to agent service
                 const response = await axios_1.default.post(AGENT_SERVICE_URL, {
                     message,
@@ -99,8 +58,6 @@ MERGE (a)-[:HAS_PLAYER]->(player)
                 });
                 // Mark as successful
                 isAgentSuccess = true;
-                // Extract agent response and Cypher query
-                let agentResponse = response.data.output || response.data;
                 // Extract Cypher query from the response if available in intermediateSteps
                 let cypherQuery = "unknown";
                 if (response.data.intermediateSteps &&
@@ -123,20 +80,6 @@ MERGE (a)-[:HAS_PLAYER]->(player)
                         }
                     }
                 }
-                // Update prompt success status in Neo4j
-                await session.executeWrite(async (tx) => {
-                    await tx.run(`
-            MATCH (p:Prompt {uuid: $promptUuid})
-            SET p.success = $success,
-            p.agentResponse = $agentResponse,
-            p.cypherQuery = $cypherQuery
-            `, {
-                        promptUuid,
-                        success: true,
-                        agentResponse: String(response.data.output || ""),
-                        cypherQuery: String(cypherQuery || "unknown")
-                    });
-                });
                 // Return the agent's response
                 res.status(200).json(response.data);
             }

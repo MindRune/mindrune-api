@@ -30,7 +30,7 @@ const batchProcessHitSplats = async (session, events, txnUuid, dataUuid, account
         "POISON_ENEMY", "DISEASE_ENEMY", "VENOM_ENEMY",
         "VENOM_ME", "POISON_ME", "DISEASE_ME"
     ];
-    // List of ALL damage types that should NEVER be Character nodes
+    // List of ALL damage types that should NEVER be monster nodes
     const allDamageTypes = [
         // Specific afflictions (these will become Affliction nodes)
         "POISON", "DISEASE", "VENOM", "BURN",
@@ -61,7 +61,7 @@ const batchProcessHitSplats = async (session, events, txnUuid, dataUuid, account
                 else if (typeof source === 'number' || !source) {
                     source = typeString || `DAMAGE_TYPE_${source || 'UNKNOWN'}`;
                 }
-                // First check if this is a damage type at all (to prevent Character nodes)
+                // First check if this is a damage type at all (to prevent monster nodes)
                 let isDamageType = false;
                 if (typeof source === 'string') {
                     const upperSource = source.toUpperCase();
@@ -147,11 +147,11 @@ const batchProcessHitSplats = async (session, events, txnUuid, dataUuid, account
       // Handle different source types using a conditional approach
       WITH e, event, player
       
-      // For regular characters
+      // For regular monsters
       FOREACH (ignoreMe IN CASE WHEN NOT event.isDamageType THEN [1] ELSE [] END |
-        MERGE (character:Character {name: event.source})
-        ON CREATE SET character.color = "#964B00"
-        CREATE (character)-[:PERFORMED]->(e)
+        MERGE (monster:Monster {name: event.source})
+        ON CREATE SET monster.color = "#964B00"
+        CREATE (monster)-[:PERFORMED]->(e)
       )
       
       // For afflictions only
@@ -233,10 +233,10 @@ const batchProcessHitSplats = async (session, events, txnUuid, dataUuid, account
         // Player performed the hit
         CREATE (player)-[:PERFORMED]->(e)
         
-        // Merge target character and link
-        MERGE (character:Character {name: COALESCE(event.target, 'Unknown')})
-        ON CREATE SET character.color = "#964B00"
-        CREATE (e)-[:TARGETED]->(character)
+        // Merge target monster and link
+        MERGE (monster:Monster {name: COALESCE(event.target, 'Unknown')})
+        ON CREATE SET monster.color = "#964B00"
+        CREATE (e)-[:TARGETED]->(monster)
       `, outgoingParams));
         }
     }
@@ -307,10 +307,10 @@ const batchProcessHitSplats = async (session, events, txnUuid, dataUuid, account
         // Player performed the hit
         CREATE (player)-[:PERFORMED]->(e)
         
-        // Merge target character and link
-        MERGE (character:Character {name: COALESCE(event.target, 'Unknown')})
-        ON CREATE SET character.color = "#964B00"
-        CREATE (e)-[:TARGETED]->(character)
+        // Merge target monster and link
+        MERGE (monster:monster {name: COALESCE(event.target, 'Unknown')})
+        ON CREATE SET monster.color = "#964B00"
+        CREATE (e)-[:TARGETED]->(monster)
       `, unknownParams));
         }
     }

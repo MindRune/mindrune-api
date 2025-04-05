@@ -64,51 +64,6 @@ class AgentController {
         }
       );
 
-      // Generate unique identifiers
-      promptUuid = uuidv4();
-      const timestamp = new Date().toISOString();
-
-      // First, insert account and prompt into Neo4j
-      await session.executeWrite(async (tx) => {
-        // Merge account node or create if not exists
-        await tx.run(
-          `
-          MERGE (a:Account {account: $account})
-ON CREATE SET
-  a.createdAt = datetime($timestamp),
-  a.firstSeen = datetime($timestamp)
-ON MATCH SET
-  a.lastSeen = datetime($timestamp)
-
-// Create prompt event node with default success status
-CREATE (p:Prompt {
-  uuid: $promptUuid,
-  eventType: 'PROMPT',
-  timestamp: datetime($timestamp),
-  userQuery: $message,
-  cypherQuery: 'unknown',
-  agentResponse: 'unknown',
-  success: false
-})
-
-// Link prompt to account
-CREATE (p)-[:ASKED_BY]->(a)
-
-// Find and MERGE (not CREATE) relationships to players
-// This ensures we only create the relationship if it doesn't exist
-WITH a
-MATCH (player:Player {account: $account})
-MERGE (a)-[:HAS_PLAYER]->(player)
-        `,
-          {
-            account,
-            promptUuid,
-            timestamp,
-            message,
-          }
-        );
-      });
-
       // Forward request to agent service
       const response = await axios.post(
         AGENT_SERVICE_URL,
@@ -129,9 +84,6 @@ MERGE (a)-[:HAS_PLAYER]->(player)
 
       // Mark as successful
       isAgentSuccess = true;
-
-      // Extract agent response and Cypher query
-      let agentResponse = response.data.output || response.data;
 
       // Extract Cypher query from the response if available in intermediateSteps
       let cypherQuery = "unknown";
@@ -158,24 +110,6 @@ MERGE (a)-[:HAS_PLAYER]->(player)
           }
         }
       }
-
-      // Update prompt success status in Neo4j
-      await session.executeWrite(async (tx) => {
-        await tx.run(
-            `
-            MATCH (p:Prompt {uuid: $promptUuid})
-            SET p.success = $success,
-            p.agentResponse = $agentResponse,
-            p.cypherQuery = $cypherQuery
-            `,
-            { 
-              promptUuid, 
-              success: true,
-              agentResponse: String(response.data.output || ""),
-              cypherQuery: String(cypherQuery || "unknown")
-            }
-          );
-      });
 
       // Return the agent's response
       res.status(200).json(response.data);

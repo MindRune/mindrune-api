@@ -77,8 +77,8 @@ export const batchProcessMonsterKills = async (
       // Link from player to event (player killed monster)
       CREATE (player)-[:KILLED]->(e)
       
-      // MERGE the monster character node - only create if it doesn't exist
-      MERGE (monster:Character {name: event.monsterName})
+      // MERGE the monster Monster node - only create if it doesn't exist
+      MERGE (monster:Monster {name: event.monsterName})
       // Set properties only on first creation
       ON CREATE SET 
         monster.color = "#964B00", 
@@ -120,7 +120,7 @@ export const batchProcessMonsterKills = async (
       WITH e, monster, player
       MATCH (h:HitSplat)-[:PERFORMED_BY]->(player)
       WHERE h.timestamp > datetime() - duration({minutes: 2})
-      MATCH (h)-[:TARGETED]->(target:Character)
+      MATCH (h)-[:TARGETED]->(target:Monster)
       WHERE target.name = monster.name
       CREATE (h)-[:CONTRIBUTED_TO]->(e)
     `, params);

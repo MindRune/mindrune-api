@@ -695,7 +695,7 @@ const interfaceActions = [
 const determineTargetType = (action, originalTarget, hasLevel) => {
     // First check based on level presence
     if (originalTarget.includes("(level")) {
-        return "character";
+        return "monster";
     }
     let targetType = "unknown";
     // Determine by action
@@ -1091,9 +1091,6 @@ ON CREATE SET character.color = "#964B00"
 WITH eventData.event AS e, eventData.action AS action, character
 
 // Basic NPC interactions
-FOREACH(ignoreMe IN CASE WHEN action = "Attack" THEN [1] ELSE [] END | 
-  CREATE (e)-[:ATTACKED]->(character))
-  
 FOREACH(ignoreMe IN CASE WHEN action = "Talk-to" THEN [1] ELSE [] END | 
   CREATE (e)-[:TALKED_TO]->(character))
   
@@ -1144,34 +1141,9 @@ FOREACH(ignoreMe IN CASE WHEN action = "Get-rewards" THEN [1] ELSE [] END |
 FOREACH(ignoreMe IN CASE WHEN action = "Check-count" THEN [1] ELSE [] END | 
   CREATE (e)-[:CHECKED_COUNT_WITH]->(character))
 
-// Combat
-FOREACH(ignoreMe IN CASE WHEN action = "Weaken" THEN [1] ELSE [] END | 
-  CREATE (e)-[:WEAKENED]->(character))
-  
-FOREACH(ignoreMe IN CASE WHEN action = "Stun" THEN [1] ELSE [] END | 
-  CREATE (e)-[:STUNNED]->(character))
-  
-FOREACH(ignoreMe IN CASE WHEN action = "Bash" THEN [1] ELSE [] END | 
-  CREATE (e)-[:BASHED]->(character))
-  
-FOREACH(ignoreMe IN CASE WHEN action = "Slay" THEN [1] ELSE [] END | 
-  CREATE (e)-[:SLAYED]->(character))
-  
-FOREACH(ignoreMe IN CASE WHEN action = "Intimidate" THEN [1] ELSE [] END | 
-  CREATE (e)-[:INTIMIDATED]->(character))
-
 // Magic
 FOREACH(ignoreMe IN CASE WHEN action = "Teleother" THEN [1] ELSE [] END | 
-  CREATE (e)-[:TELEOTHERED]->(character))
-  
-FOREACH(ignoreMe IN CASE WHEN action = "Bones to bananas" THEN [1] ELSE [] END | 
-  CREATE (e)-[:BONES_TO_BANANAS]->(character))
-  
-FOREACH(ignoreMe IN CASE WHEN action = "Enchant" THEN [1] ELSE [] END | 
-  CREATE (e)-[:ENCHANTED]->(character))
-  
-FOREACH(ignoreMe IN CASE WHEN action = "Alch" THEN [1] ELSE [] END | 
-  CREATE (e)-[:ALCHED]->(character))
+  CREATE (e)-[:TELEOTHERED]->(player))
 
 // Quest specific
 FOREACH(ignoreMe IN CASE WHEN action = "Rescue" THEN [1] ELSE [] END | 
@@ -1191,15 +1163,60 @@ FOREACH(ignoreMe IN CASE WHEN action = "Signal" THEN [1] ELSE [] END |
 
 // Catch-all for any actions not explicitly defined
 FOREACH(ignoreMe IN CASE WHEN NOT action IN [
-  "Attack", "Talk-to", "Trade", "Pickpocket", "Examine", "Collect", "Pay", "Heal", "Cure",
+  "Talk-to", "Trade", "Pickpocket", "Examine", "Collect", "Pay", "Heal", "Cure",
   "Steal-from", "Knock-out", "Lure", 
   "Get-task", "Skip-task", "Block-task", "Get-rewards", "Check-count",
-  "Weaken", "Stun", "Bash", "Slay", "Intimidate",
-  "Teleother", "Bones to bananas", "Enchant", "Alch",
+  "Teleother",
   "Rescue", "Free", "Escort", "Distract", "Signal"
 ] THEN [1] ELSE [] END | 
   CREATE (e)-[:INTERACTED_WITH]->(character))
       `, params);
+        // Process monster targets in the same pattern
+        await tx.run(`
+        // First, get all events that need monster processing
+  MATCH (player:Player {account: $account, playerId: $playerId})
+  MATCH (e:MenuClick)-[:PERFORMED_BY]->(player)
+  WHERE e.targetType = 'monster' AND NOT EXISTS((e)-->(:Monster))
+  WITH e, e.target AS targetName, e.action AS action
+  WHERE targetName IS NOT NULL AND targetName <> ''
+  
+  // For each event, create a single transaction
+  WITH collect({event: e, targetName: targetName, action: action}) AS eventBatch
+  
+  UNWIND eventBatch AS eventData
+  
+  // For each event, MERGE ensures we find or create exactly one Monster node
+  MERGE (monster:Monster {name: eventData.targetName})
+  
+  // Set properties only on create to avoid overwriting
+  ON CREATE SET monster.color = "#964B00"
+  
+  // Now, add specific relationship types based on the action
+  WITH eventData.event AS e, eventData.action AS action, monster
+  
+  // Basic NPC interactions
+  FOREACH(ignoreMe IN CASE WHEN action = "Attack" THEN [1] ELSE [] END | 
+    CREATE (e)-[:ATTACKED]->(monster))
+    
+  FOREACH(ignoreMe IN CASE WHEN action = "Examine" THEN [1] ELSE [] END | 
+    CREATE (e)-[:EXAMINED]->(monster))
+  
+  // Combat
+  FOREACH(ignoreMe IN CASE WHEN action = "Weaken" THEN [1] ELSE [] END | 
+    CREATE (e)-[:WEAKENED]->(monster))
+    
+  FOREACH(ignoreMe IN CASE WHEN action = "Stun" THEN [1] ELSE [] END | 
+    CREATE (e)-[:STUNNED]->(monster))
+    
+  FOREACH(ignoreMe IN CASE WHEN action = "Slay" THEN [1] ELSE [] END | 
+    CREATE (e)-[:SLAYED]->(monster))
+  
+  // Catch-all for any actions not explicitly defined
+  FOREACH(ignoreMe IN CASE WHEN NOT action IN [
+    "Attack", "Examine", "Weaken", "Stun", "Slay"
+  ] THEN [1] ELSE [] END | 
+    CREATE (e)-[:INTERACTED_WITH]->(monster))
+        `, params);
         // Process object targets in the same pattern
         await tx.run(`
       // First, get all events that need object processing
