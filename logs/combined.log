@@ -14041,3 +14041,252 @@
 {"error":{"code":"ECONNABORTED","config":{"adapter":["xhr","http","fetch"],"allowAbsoluteUrls":true,"data":"{\"message\":\"what items have I received as a drop from monster kills?\",\"account\":\"oauth2|discord|177946696251211776\",\"context\":[]}","env":{},"headers":{"Accept":"application/json, text/plain, */*","Accept-Encoding":"gzip, compress, deflate, br","Content-Length":"129","Content-Type":"application/json","User-Agent":"axios/1.8.4"},"maxBodyLength":-1,"maxContentLength":-1,"method":"post","timeout":480000,"transformRequest":[null],"transformResponse":[null],"transitional":{"clarifyTimeoutError":false,"forcedJSONParsing":true,"silentJSONParsing":true},"url":"http://localhost:4000/agent","xsrfCookieName":"XSRF-TOKEN","xsrfHeaderName":"X-XSRF-TOKEN"},"message":"timeout of 480000ms exceeded","name":"AxiosError","stack":"AxiosError: timeout of 480000ms exceeded\n    at RedirectableRequest.handleRequestTimeout (C:\\Users\\Cosmi\\MindRune\\mindrune-api\\node_modules\\axios\\dist\\node\\axios.cjs:3206:16)\n    at RedirectableRequest.emit (node:events:519:28)\n    at Timeout.<anonymous> (C:\\Users\\Cosmi\\MindRune\\mindrune-api\\node_modules\\follow-redirects\\index.js:221:12)\n    at listOnTimeout (node:internal/timers:573:17)\n    at process.processTimers (node:internal/timers:514:7)\n    at Axios.request (C:\\Users\\Cosmi\\MindRune\\mindrune-api\\node_modules\\axios\\dist\\node\\axios.cjs:4258:41)\n    at runNextTicks (node:internal/process/task_queues:60:5)\n    at listOnTimeout (node:internal/timers:540:9)\n    at process.processTimers (node:internal/timers:514:7)\n    at async AgentController.processMessage (C:\\Users\\Cosmi\\MindRune\\mindrune-api\\dist\\controllers\\agent.controller.js:47:34)\n    at async C:\\Users\\Cosmi\\MindRune\\mindrune-api\\dist\\routes\\agent.js:16:5"},"level":"error","message":"Error processing agent request","service":"mindrune-api","timestamp":"2025-04-04 20:06:49"}
 {"error":{"code":"ECONNABORTED","config":{"adapter":["xhr","http","fetch"],"allowAbsoluteUrls":true,"data":"{\"message\":\"what items have I received as a drop from monster kills?\",\"account\":\"oauth2|discord|177946696251211776\",\"context\":[]}","env":{},"headers":{"Accept":"application/json, text/plain, */*","Accept-Encoding":"gzip, compress, deflate, br","Content-Length":"129","Content-Type":"application/json","User-Agent":"axios/1.8.4"},"maxBodyLength":-1,"maxContentLength":-1,"method":"post","timeout":480000,"transformRequest":[null],"transformResponse":[null],"transitional":{"clarifyTimeoutError":false,"forcedJSONParsing":true,"silentJSONParsing":true},"url":"http://localhost:4000/agent","xsrfCookieName":"XSRF-TOKEN","xsrfHeaderName":"X-XSRF-TOKEN"},"message":"timeout of 480000ms exceeded","name":"AxiosError","stack":"AxiosError: timeout of 480000ms exceeded\n    at RedirectableRequest.handleRequestTimeout (C:\\Users\\Cosmi\\MindRune\\mindrune-api\\node_modules\\axios\\dist\\node\\axios.cjs:3206:16)\n    at RedirectableRequest.emit (node:events:519:28)\n    at Timeout.<anonymous> (C:\\Users\\Cosmi\\MindRune\\mindrune-api\\node_modules\\follow-redirects\\index.js:221:12)\n    at listOnTimeout (node:internal/timers:573:17)\n    at process.processTimers (node:internal/timers:514:7)\n    at Axios.request (C:\\Users\\Cosmi\\MindRune\\mindrune-api\\node_modules\\axios\\dist\\node\\axios.cjs:4258:41)\n    at runNextTicks (node:internal/process/task_queues:60:5)\n    at listOnTimeout (node:internal/timers:540:9)\n    at process.processTimers (node:internal/timers:514:7)\n    at async AgentController.processMessage (C:\\Users\\Cosmi\\MindRune\\mindrune-api\\dist\\controllers\\agent.controller.js:47:34)\n    at async C:\\Users\\Cosmi\\MindRune\\mindrune-api\\dist\\routes\\agent.js:16:5"},"level":"error","message":"Error processing agent request","service":"mindrune-api","timestamp":"2025-04-04 20:07:12"}
 {"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: undefined","service":"mindrune-agent","timestamp":"2025-04-04 20:09:12"}
+{"level":"info","message":"Auth0 clients initialized successfully","service":"mindrune-api","timestamp":"2025-09-21 18:10:06"}
+{"level":"info","message":"Server running on port 5575","service":"mindrune-api","timestamp":"2025-09-21 18:10:06"}
+{"level":"info","message":"Auth0 clients initialized successfully","service":"mindrune-api","timestamp":"2025-09-21 18:11:13"}
+{"level":"info","message":"Server running on port 5575","service":"mindrune-api","timestamp":"2025-09-21 18:11:13"}
+{"level":"info","message":"Creating new connection pool for database 'mindrune_db'","service":"mindrune-api","timestamp":"2025-09-21 18:11:37"}
+{"level":"info","message":"Initializing Neo4j driver for URI: neo4j://localhost:7687","service":"mindrune-api","timestamp":"2025-09-21 18:11:41"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: undefined","service":"mindrune-agent","timestamp":"2025-09-21 18:12:14"}
+{"level":"info","message":"Auth0 clients initialized successfully","service":"mindrune-api","timestamp":"2025-09-21 18:59:02"}
+{"level":"info","message":"Server running on port 5575","service":"mindrune-api","timestamp":"2025-09-21 18:59:03"}
+{"level":"info","message":"Creating new connection pool for database 'mindrune_db'","service":"mindrune-api","timestamp":"2025-09-21 19:11:29"}
+{"level":"info","message":"Initializing Neo4j driver for URI: neo4j://localhost:7687","service":"mindrune-api","timestamp":"2025-09-21 19:11:30"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: undefined","service":"mindrune-agent","timestamp":"2025-09-21 19:11:59"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: undefined","service":"mindrune-agent","timestamp":"2025-09-21 19:12:35"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: undefined","service":"mindrune-agent","timestamp":"2025-09-21 19:12:59"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: 8635364660489471000","service":"mindrune-agent","timestamp":"2025-09-21 19:13:28"}
+{"level":"info","message":"Starting create request for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Starting spam protection check for oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Checking if oauth2|discord|177946696251211776 is spamming with request type: create","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Found 0 recent create transactions for account oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Spam protection check completed in 164ms","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Starting Neo4j data insertion for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Data size: 3074 bytes","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Event count: 16","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Starting insertIntoNeo4j for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Processing 16 events","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Creating/updating player node","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Player node updated in 162ms","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Grouped events into 3 types","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Processing batch of 8 MENU_CLICK events","service":"mindrune-api","timestamp":"2025-09-21 19:16:20"}
+{"level":"info","message":"Completed batch of 8 MENU_CLICK events in 3914ms","service":"mindrune-api","timestamp":"2025-09-21 19:16:24"}
+{"level":"info","message":"Processing batch of 4 XP_GAIN events","service":"mindrune-api","timestamp":"2025-09-21 19:16:24"}
+{"level":"info","message":"Completed batch of 4 XP_GAIN events in 84ms","service":"mindrune-api","timestamp":"2025-09-21 19:16:24"}
+{"level":"info","message":"Processing batch of 4 INVENTORY_CHANGE events","service":"mindrune-api","timestamp":"2025-09-21 19:16:24"}
+{"level":"info","message":"Completed batch of 4 INVENTORY_CHANGE events in 255ms","service":"mindrune-api","timestamp":"2025-09-21 19:16:25"}
+{"level":"info","message":"All events processed in 4254ms","service":"mindrune-api","timestamp":"2025-09-21 19:16:25"}
+{"level":"info","message":"Total Neo4j operation time: 4418ms","service":"mindrune-api","timestamp":"2025-09-21 19:16:25"}
+{"level":"info","message":"Neo4j session closed after 4418ms","service":"mindrune-api","timestamp":"2025-09-21 19:16:25"}
+{"level":"info","message":"Neo4j insertion completed in 4418ms","service":"mindrune-api","timestamp":"2025-09-21 19:16:25"}
+{"level":"info","message":"Starting SQL insertion","service":"mindrune-api","timestamp":"2025-09-21 19:16:25"}
+{"level":"info","message":"SQL insertion completed in 69ms","service":"mindrune-api","timestamp":"2025-09-21 19:16:25"}
+{"level":"info","message":"Total request processing time: 4654ms","service":"mindrune-api","timestamp":"2025-09-21 19:16:25"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 19:17:02"}
+{"level":"info","message":"Starting create request for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Starting spam protection check for oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Checking if oauth2|discord|177946696251211776 is spamming with request type: create","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Found 0 recent create transactions for account oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Spam protection check completed in 24ms","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Starting Neo4j data insertion for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Data size: 1843 bytes","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Event count: 9","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Starting insertIntoNeo4j for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Processing 9 events","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Creating/updating player node","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Player node updated in 26ms","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Grouped events into 3 types","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Processing batch of 4 XP_GAIN events","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Completed batch of 4 XP_GAIN events in 48ms","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Processing batch of 4 INVENTORY_CHANGE events","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Completed batch of 4 INVENTORY_CHANGE events in 36ms","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Processing batch of 1 MENU_CLICK events","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Completed batch of 1 MENU_CLICK events in 424ms","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"All events processed in 510ms","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Total Neo4j operation time: 537ms","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Neo4j session closed after 537ms","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Neo4j insertion completed in 538ms","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"Starting SQL insertion","service":"mindrune-api","timestamp":"2025-09-21 19:17:20"}
+{"level":"info","message":"SQL insertion completed in 86ms","service":"mindrune-api","timestamp":"2025-09-21 19:17:21"}
+{"level":"info","message":"Total request processing time: 649ms","service":"mindrune-api","timestamp":"2025-09-21 19:17:21"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: undefined","service":"mindrune-agent","timestamp":"2025-09-21 19:24:09"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: undefined","service":"mindrune-agent","timestamp":"2025-09-21 19:29:13"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: undefined","service":"mindrune-agent","timestamp":"2025-09-21 19:29:41"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 19:30:42"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 19:31:09"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 19:32:50"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:04:01"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:06:07"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:06:32"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:08:53"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:09:10"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:10:35"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:10:57"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:12:47"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:13:03"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:13:23"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:27:50"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:28:42"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:28:58"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:29:34"}
+{"level":"info","message":"Starting create request for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Starting spam protection check for oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Checking if oauth2|discord|177946696251211776 is spamming with request type: create","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Found 0 recent create transactions for account oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Spam protection check completed in 4ms","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Starting Neo4j data insertion for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Data size: 2482 bytes","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Event count: 13","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Starting insertIntoNeo4j for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Processing 13 events","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Creating/updating player node","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Player node updated in 35ms","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Grouped events into 3 types","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Processing batch of 7 MENU_CLICK events","service":"mindrune-api","timestamp":"2025-09-21 22:33:20"}
+{"level":"info","message":"Completed batch of 7 MENU_CLICK events in 3529ms","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"Processing batch of 3 XP_GAIN events","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"Completed batch of 3 XP_GAIN events in 100ms","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"Processing batch of 3 INVENTORY_CHANGE events","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"Completed batch of 3 INVENTORY_CHANGE events in 179ms","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"All events processed in 3810ms","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"Total Neo4j operation time: 3846ms","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"Neo4j session closed after 3846ms","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"Neo4j insertion completed in 3847ms","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"Starting SQL insertion","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"SQL insertion completed in 62ms","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"Total request processing time: 3915ms","service":"mindrune-api","timestamp":"2025-09-21 22:33:24"}
+{"level":"info","message":"Starting create request for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Starting spam protection check for oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Checking if oauth2|discord|177946696251211776 is spamming with request type: create","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Found 0 recent create transactions for account oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Spam protection check completed in 1ms","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Starting Neo4j data insertion for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Data size: 5618 bytes","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Event count: 29","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Starting insertIntoNeo4j for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Processing 29 events","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Creating/updating player node","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Player node updated in 8ms","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Grouped events into 3 types","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Processing batch of 11 XP_GAIN events","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Completed batch of 11 XP_GAIN events in 33ms","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Processing batch of 11 INVENTORY_CHANGE events","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Completed batch of 11 INVENTORY_CHANGE events in 138ms","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Processing batch of 7 MENU_CLICK events","service":"mindrune-api","timestamp":"2025-09-21 22:34:20"}
+{"level":"info","message":"Completed batch of 7 MENU_CLICK events in 539ms","service":"mindrune-api","timestamp":"2025-09-21 22:34:21"}
+{"level":"info","message":"All events processed in 712ms","service":"mindrune-api","timestamp":"2025-09-21 22:34:21"}
+{"level":"info","message":"Total Neo4j operation time: 720ms","service":"mindrune-api","timestamp":"2025-09-21 22:34:21"}
+{"level":"info","message":"Neo4j session closed after 720ms","service":"mindrune-api","timestamp":"2025-09-21 22:34:21"}
+{"level":"info","message":"Neo4j insertion completed in 721ms","service":"mindrune-api","timestamp":"2025-09-21 22:34:21"}
+{"level":"info","message":"Starting SQL insertion","service":"mindrune-api","timestamp":"2025-09-21 22:34:21"}
+{"level":"info","message":"SQL insertion completed in 24ms","service":"mindrune-api","timestamp":"2025-09-21 22:34:21"}
+{"level":"info","message":"Total request processing time: 746ms","service":"mindrune-api","timestamp":"2025-09-21 22:34:21"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:35:07"}
+{"level":"info","message":"Starting create request for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Starting spam protection check for oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Checking if oauth2|discord|177946696251211776 is spamming with request type: create","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Found 0 recent create transactions for account oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Spam protection check completed in 3ms","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Starting Neo4j data insertion for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Data size: 2401 bytes","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Event count: 12","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Starting insertIntoNeo4j for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Processing 12 events","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Creating/updating player node","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Player node updated in 23ms","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Grouped events into 3 types","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Processing batch of 5 XP_GAIN events","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Completed batch of 5 XP_GAIN events in 31ms","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Processing batch of 5 INVENTORY_CHANGE events","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Completed batch of 5 INVENTORY_CHANGE events in 87ms","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Processing batch of 2 MENU_CLICK events","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Completed batch of 2 MENU_CLICK events in 19ms","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"All events processed in 137ms","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Total Neo4j operation time: 163ms","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Neo4j session closed after 163ms","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Neo4j insertion completed in 163ms","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Starting SQL insertion","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"SQL insertion completed in 77ms","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Total request processing time: 243ms","service":"mindrune-api","timestamp":"2025-09-21 22:35:20"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:35:55"}
+{"level":"info","message":"Starting create request for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Starting spam protection check for oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Checking if oauth2|discord|177946696251211776 is spamming with request type: create","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Found 0 recent create transactions for account oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Spam protection check completed in 1ms","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Starting Neo4j data insertion for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Data size: 1454 bytes","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Event count: 7","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Starting insertIntoNeo4j for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Processing 7 events","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Creating/updating player node","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Player node updated in 9ms","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Grouped events into 3 types","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Processing batch of 3 XP_GAIN events","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Completed batch of 3 XP_GAIN events in 10ms","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Processing batch of 3 INVENTORY_CHANGE events","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Completed batch of 3 INVENTORY_CHANGE events in 16ms","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Processing batch of 1 MENU_CLICK events","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Completed batch of 1 MENU_CLICK events in 76ms","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"All events processed in 102ms","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Total Neo4j operation time: 111ms","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Neo4j session closed after 112ms","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Neo4j insertion completed in 113ms","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Starting SQL insertion","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"SQL insertion completed in 21ms","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Total request processing time: 136ms","service":"mindrune-api","timestamp":"2025-09-21 22:36:20"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:37:29"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:37:46"}
+{"level":"info","message":"Forwarding agent request to external service for account: oauth2|discord|177946696251211776, player: -2563079567670101000","service":"mindrune-agent","timestamp":"2025-09-21 22:38:12"}
+{"level":"info","message":"Starting create request for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Starting spam protection check for oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Checking if oauth2|discord|177946696251211776 is spamming with request type: create","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Found 0 recent create transactions for account oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Spam protection check completed in 24ms","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Starting Neo4j data insertion for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Data size: 1560 bytes","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Event count: 8","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Starting insertIntoNeo4j for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Processing 8 events","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Creating/updating player node","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Player node updated in 16ms","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Grouped events into 3 types","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Processing batch of 6 MENU_CLICK events","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Completed batch of 6 MENU_CLICK events in 22ms","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Processing batch of 1 XP_GAIN events","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Completed batch of 1 XP_GAIN events in 81ms","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Processing batch of 1 INVENTORY_CHANGE events","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Completed batch of 1 INVENTORY_CHANGE events in 160ms","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"All events processed in 265ms","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Total Neo4j operation time: 282ms","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Neo4j session closed after 283ms","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Neo4j insertion completed in 284ms","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Starting SQL insertion","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"SQL insertion completed in 21ms","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Total request processing time: 329ms","service":"mindrune-api","timestamp":"2025-09-21 22:39:20"}
+{"level":"info","message":"Starting create request for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Starting spam protection check for oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Checking if oauth2|discord|177946696251211776 is spamming with request type: create","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Found 0 recent create transactions for account oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Spam protection check completed in 24ms","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Starting Neo4j data insertion for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Data size: 5236 bytes","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Event count: 27","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Starting insertIntoNeo4j for account: oauth2|discord|177946696251211776","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Processing 27 events","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Creating/updating player node","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Player node updated in 17ms","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Grouped events into 3 types","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Processing batch of 9 MENU_CLICK events","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Completed batch of 9 MENU_CLICK events in 41ms","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Processing batch of 9 XP_GAIN events","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Completed batch of 9 XP_GAIN events in 28ms","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Processing batch of 9 INVENTORY_CHANGE events","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Completed batch of 9 INVENTORY_CHANGE events in 29ms","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"All events processed in 99ms","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Total Neo4j operation time: 117ms","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Neo4j session closed after 118ms","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Neo4j insertion completed in 119ms","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Starting SQL insertion","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"SQL insertion completed in 72ms","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
+{"level":"info","message":"Total request processing time: 215ms","service":"mindrune-api","timestamp":"2025-09-21 22:40:20"}
